@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" role="img" aria-label="Maestro flow: Discord to Maestro core, AI model and catalog, then servers with remote tools and SSH bridge.">
+  <style type="text/css"><![CDATA[
+    .bg { fill: #0a1410; }
+    .label { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; fill: #f0faf4; }
+    .sub { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 9px; fill: #7a9488; }
+    .col { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 9px; fill: #7a9488; }
+    .box { fill: #16241c; stroke: #2a3d34; stroke-width: 1.5; }
+    .core { stroke: #00ff00; }
+    .edge { stroke: #3d5a4c; stroke-width: 1.5; fill: none; }
+    .flow { stroke: #00ff00; stroke-dasharray: 5 7; }
+    .fallback { stroke: #6a9a7a; stroke-dasharray: 2 6; opacity: 0.85; }
+  ]]></style>
+  <rect class="bg" width="760" height="340" rx="12"/>
+
+  <text class="col" x="150" y="22" text-anchor="middle">Interface</text>
+  <text class="col" x="380" y="22" text-anchor="middle">Core</text>
+  <text class="col" x="610" y="22" text-anchor="middle">Destination</text>
+
+  <path class="edge flow" d="M240 178 H280"/>
+  <path class="edge flow" d="M380 150 V96"/>
+  <path class="edge flow" d="M480 178 H520"/>
+  <path class="edge flow" d="M380 206 V250"/>
+  <path class="edge" d="M610 150 V96"/>
+  <path class="edge fallback" d="M480 206 L520 278"/>
+  <path class="edge fallback" d="M610 250 V206"/>
+
+  <g>
+    <rect class="box" x="60" y="150" width="180" height="56" rx="10"/>
+    <text class="label" x="150" y="176" text-anchor="middle">Discord</text>
+    <text class="sub" x="150" y="192" text-anchor="middle">interface</text>
+  </g>
+  <g>
+    <rect class="box core" x="290" y="40" width="180" height="56" rx="10"/>
+    <text class="label" x="380" y="66" text-anchor="middle" fill="#00ff00">AI model</text>
+    <text class="sub" x="380" y="82" text-anchor="middle">focused session</text>
+  </g>
+  <g>
+    <rect class="box core" x="280" y="150" width="200" height="56" rx="10"/>
+    <text class="label" x="380" y="176" text-anchor="middle" fill="#00ff00">Maestro</text>
+    <text class="sub" x="380" y="192" text-anchor="middle">orchestrator bot</text>
+  </g>
+  <g>
+    <rect class="box" x="280" y="250" width="200" height="64" rx="10"/>
+    <text class="label" x="380" y="278" text-anchor="middle">Catalog</text>
+    <text class="sub" x="380" y="296" text-anchor="middle">projects / tools / context</text>
+  </g>
+  <g>
+    <rect class="box" x="530" y="40" width="160" height="56" rx="10"/>
+    <text class="label" x="610" y="66" text-anchor="middle">Remote tools</text>
+    <text class="sub" x="610" y="82" text-anchor="middle">Chrome / OpenCloud / ...</text>
+  </g>
+  <g>
+    <rect class="box core" x="520" y="150" width="180" height="56" rx="10"/>
+    <text class="label" x="610" y="176" text-anchor="middle" fill="#00ff00">Servers</text>
+    <text class="sub" x="610" y="192" text-anchor="middle">SSH access</text>
+  </g>
+  <g>
+    <rect class="box" x="520" y="250" width="180" height="56" rx="10"/>
+    <text class="label" x="610" y="276" text-anchor="middle">SSH bridge</text>
+    <text class="sub" x="610" y="292" text-anchor="middle">fallback / own rules</text>
+  </g>
+</svg>

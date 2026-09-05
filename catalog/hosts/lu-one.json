@@ -1,0 +1,77 @@
+{
+  "host": "lu-one",
+  "description": "Lu mesh host. Live Minecraft (Withered Nexus) and related bots/web. Operate via ssh lu-one from Maestro on lu-zero.",
+  "ssh_alias": "lu-one",
+  "projects": [
+    {
+      "id": "withered-nexus",
+      "kind": "mc",
+      "path": "/root/servers/minecraft/withered-nexus",
+      "summary": "Live Paper Minecraft server (Docker healthy on lu-one).",
+      "context": "contexts/withered-nexus",
+      "aliases": [
+        "wn",
+        "withered",
+        "nexus",
+        "paper"
+      ],
+      "active": true
+    },
+    {
+      "id": "jarvys",
+      "kind": "bot",
+      "path": "/root/bots/minecraft-admin-bot",
+      "summary": "Discord admin bot for Withered Nexus (jarvys.service on lu-one).",
+      "context": "contexts/jarvys",
+      "aliases": [
+        "jarvys-bot",
+        "minecraft-admin-bot"
+      ],
+      "active": true
+    },
+    {
+      "id": "jarvys-ingame",
+      "kind": "bot",
+      "path": "/root/servers/minecraft/withered-nexus/jarvys-ingame-instance",
+      "summary": "In-game RCON/chat presence container for Withered Nexus.",
+      "context": "contexts/jarvys",
+      "aliases": [
+        "ingame",
+        "jarvys ingame",
+        "jarvys-ingame-instance"
+      ],
+      "active": true
+    },
+    {
+      "id": "mc-web",
+      "kind": "web",
+      "path": "/var/www/mc.ldeluipy.es",
+      "summary": "Public Minecraft site mc.ldeluipy.es (Apache on lu-one).",
+      "context": "contexts/mc-web",
+      "aliases": [
+        "mc.ldeluipy.es",
+        "minecraft web",
+        "mc site"
+      ],
+      "active": true,
+      "autoagents": {
+        "enabled": true,
+        "rel_dir": "agents",
+        "loop": "agent-loop.sh"
+      }
+    },
+    {
+      "id": "lu-one-ops",
+      "kind": "ops",
+      "path": "/root/scripts",
+      "summary": "Host maintenance: WN backup/restore-test, disk/journal Discord alerts, docker prune.",
+      "context": "contexts/lu-one-ops",
+      "aliases": [
+        "one-ops",
+        "lu-one scripts",
+        "lu one ops"
+      ],
+      "active": true
+    }
+  ]
+}

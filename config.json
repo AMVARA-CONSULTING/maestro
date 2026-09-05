@@ -1,0 +1,35 @@
+{
+  "timezone": "Europe/Madrid",
+  "discord": {
+    "guild_id": 788074756044750891,
+    "channel_id": 1543636451890176040,
+    "homes": [
+      {
+        "guild_id": 788074756044750891,
+        "channel_id": 1543636451890176040
+      },
+      {
+        "guild_id": 687616904088911936,
+        "channel_id": 1545493623259398284
+      }
+    ],
+    "allowed_user_id": 488728568457854976,
+    "application_id": 1543637303354728458,
+    "nl_commands": true,
+    "message_content_intent": true
+  },
+  "nl": {
+    "enabled": true,
+    "router_timeout_seconds": 180
+  },
+  "cursor_agent": {
+    "enabled": true,
+    "bin_path": "/root/.local/bin/cursor-agent",
+    "timeout_seconds": 900,
+    "workspace": "/root"
+  },
+  "host": {
+    "name": "lu-zero",
+    "description": "Primary host where Maestro runs. Docker projects, bots, Minecraft-related stacks."
+  }
+}

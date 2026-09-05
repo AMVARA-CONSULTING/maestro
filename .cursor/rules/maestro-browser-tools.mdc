@@ -1,0 +1,23 @@
+---
+description: Browser tool hygiene — chrome-mcp preferred; max 1 window / 2 tabs
+alwaysApply: true
+---
+
+# Maestro: browser tools hygiene
+
+When using any real browser in the fleet (**`chrome-mcp`** on amvara2, **`selenium-chrome`** on amvara6, or lu-zero CDP/MCP wrappers):
+
+## Prefer
+
+- **`chrome-mcp`** (amvara2) for agent work. Skill: `.cursor/skills/browser-tools/SKILL.md`. Pack: `contexts/chrome-mcp/`.
+- **`selenium-chrome`** (amvara6) only for WebDriver / noVNC / Cognos-style lab needs.
+
+## Hard limits
+
+1. **Max 1 window** — do not start a second Chrome/Chromium or a second remote-debugging port.
+2. **Max 2 tabs** — prefer one; reuse via navigate; never open a new tab per URL by default.
+3. **End of session** — leave **one** page target, or run  
+   `ssh amvara2 'cd /home/amvara/projects/chrome-mcp && ./scripts/close-extra-tabs.sh'`.
+4. **No secrets on Discord** — no cookies, passwords, tokens, or auth headers from the browser session.
+
+Leftover tabs saturate RAM on amvara2 (container mem limit ~1536 MiB). Treat tab sprawl as a defect to fix before finishing.

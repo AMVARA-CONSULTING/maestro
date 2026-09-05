@@ -1,0 +1,76 @@
+{
+  "host": "amvara4",
+  "description": "Amvara SSH bridge host. Ultron, amvarabridge, d-writer, su-portfolio, and host ops. Reach with ssh amvara4 from Maestro.",
+  "ssh_alias": "amvara4",
+  "projects": [
+    {
+      "id": "amvara4-ops",
+      "kind": "ops",
+      "path": "/etc/misc",
+      "summary": "Host maintenance on amvara4: disk checks, journal monitor alerts, shared Amvara bash helpers (cron).",
+      "context": "contexts/amvara4-ops",
+      "aliases": [
+        "amvara-ops",
+        "amvara4 scripts",
+        "amvara 4 ops"
+      ],
+      "active": true
+    },
+    {
+      "id": "ultron",
+      "kind": "bot",
+      "path": "/root/Repos/ultron-redmine",
+      "summary": "Discord \u2194 Redmine \u2194 LLM bot (ultron.service). Source + runtime on amvara4.",
+      "context": "contexts/ultron",
+      "aliases": [
+        "ultron-redmine",
+        "ultron bot",
+        "redmine-bot"
+      ],
+      "active": true,
+      "autoagents": {
+        "enabled": true,
+        "rel_dir": "autoagents",
+        "loop": "ultron-agent-loop.sh"
+      }
+    },
+    {
+      "id": "amvarabridge",
+      "kind": "ops",
+      "path": "/root/amvarabridge",
+      "summary": "Amvara SSH bridge: fleet SSH practices, journal auditor, sidequests, Ultron notify; fallback hop lu-zero\u2192amvara4\u2192amvaraN.",
+      "context": "contexts/amvarabridge",
+      "aliases": [
+        "amvara-bridge",
+        "amvara bridge",
+        "bridge"
+      ],
+      "active": true
+    },
+    {
+      "id": "d-writer",
+      "kind": "bot",
+      "path": "/root/Repos/d-writer",
+      "summary": "Dyson Project modular editorial engine (writer loop; Ollama on amvara8).",
+      "context": "contexts/d-writer",
+      "aliases": [
+        "dyson",
+        "dyson-writer",
+        "d writer"
+      ],
+      "active": true
+    },
+    {
+      "id": "su-portfolio",
+      "kind": "web",
+      "path": "/srv/su-portfolio",
+      "summary": "Next.js portfolio stack (Docker compose prod: web + Caddy) on amvara4.",
+      "context": "contexts/su-portfolio",
+      "aliases": [
+        "portfolio-su",
+        "su portfolio"
+      ],
+      "active": true
+    }
+  ]
+}

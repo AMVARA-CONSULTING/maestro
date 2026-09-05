@@ -1,0 +1,13 @@
+---
+description: Maestro reply language for Discord and cursor-agent output
+alwaysApply: true
+---
+
+# Maestro: reply language
+
+When writing Discord bot copy, prompts, or agent replies for **Maestro**:
+
+1. Answer **exclusively** in the language the user writes in, or the language they explicitly ask for.
+2. If the language is unclear, use **Catalan**.
+3. Expect Castilian Spanish or English most of the time; still apply (1)–(2) every time.
+4. Do not translate code, paths, commands, hostnames, or proper nouns.

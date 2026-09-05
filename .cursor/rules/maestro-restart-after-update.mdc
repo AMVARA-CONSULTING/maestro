@@ -1,0 +1,45 @@
+---
+description: Maestro restarts only via /restart_maestro (never from /ca agents)
+alwaysApply: true
+---
+
+# Maestro: restart only on operator command
+
+## Hard rule
+
+**Never** restart `maestro.service` from a `/ca` or `/ca_persist` agent session.
+
+- Do **not** run `systemctl restart maestro.service`.
+- Do **not** run `python -m maestro.restart_guard operator` (CLI is denied when `MAESTRO_AGENT=1`).
+- Do **not** use `systemd-run` / `nohup` tricks to restart the bot.
+
+A service restart **SIGKILLs every in-flight cursor-agent** under the cgroup and aborts all parallel sessions.
+
+Only **Luipy** may restart: Discord **`/restart_maestro`** (or an interactive host shell **without** `MAESTRO_AGENT=1`).
+
+## What agents do after runtime code changes
+
+If you changed **runtime** code (`maestro/*.py`, `.env` shape, `systemd/maestro.service`):
+
+1. Optionally: `touch /root/bots/maestro/data/restart-pending` (hint only).
+2. Tell the operator: changes are on disk; run **`/restart_maestro`** when they want them live.
+3. Stop. Do not restart yourself.
+
+## What does **not** need a restart
+
+These are read per request / per agent session. Edit freely; **no** restart, **no** pending flag:
+
+- `contexts/**` (CONTEXT.md packs)
+- `.cursor/rules/**`, `.cursor/skills/**`
+- `prompts/**` (unless you know the bot caches them at import — today they are read per call)
+- README / docs-only edits
+
+## Operator command
+
+- `/restart_maestro` — deferred safe restart (default; blocked if `/ca` busy unless idle).
+- `/restart_maestro force:True` — restart even if other `/ca` jobs are running (**SIGKILL** them).
+
+## Do not
+
+- Restart unrelated services (including `tor.service`) unless the operator task is about that service.
+- Assume code under `maestro/` is live before the operator restarts.

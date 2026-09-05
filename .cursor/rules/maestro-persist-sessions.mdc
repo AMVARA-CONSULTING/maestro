@@ -1,0 +1,21 @@
+---
+description: Maestro persistent Discord threads bound to Cursor chat resume
+alwaysApply: true
+---
+
+# Maestro: ca_persist sessions
+
+## Behavior
+
+- `/ca_persist` (and NL) creates Cursor `create-chat` + Discord thread; map in `data/sessions.json`.
+- Follow-ups in the thread auto `--resume <chatId>` (Luipy only).
+- **Busy + FIFO queue** (max 5) per thread: never two parallel resumes on the same chat.
+- `/stop_ca` (and **Stop** on the busy status) kills **only this thread's** in-flight resume and drops its pending queue. Other persist threads and root `/ca` are untouched. Thread + Cursor chat stay open.
+- `/thread_end` only **inside** the thread: close map + delete thread.
+- Resume failures: notify + Retry / New Cursor session / End thread.
+
+## Do not
+
+- Use `--continue` (global last chat). Always `--resume` with the mapped chatId.
+- Create persist sessions outside the Maestro channel.
+- Use `/stop_ca` from the parent channel or against another thread (command is scoped to the interaction thread).

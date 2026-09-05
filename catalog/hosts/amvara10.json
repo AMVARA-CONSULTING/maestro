@@ -1,0 +1,100 @@
+{
+  "host": "amvara10",
+  "description": "KM0 Digital / OpenCloud host (amvara10). Web, mail, auth, cloud, sunday-updates, ops. Reach with ssh amvara10 from Maestro (fallback via amvara4 if needed).",
+  "ssh_alias": "amvara10",
+  "projects": [
+    {
+      "id": "amvara10-ops",
+      "kind": "ops",
+      "path": "/opt/amvara/scripts",
+      "summary": "Host maintenance on amvara10: disk checks and journal monitor alerts (cron).",
+      "context": "contexts/amvara10-ops",
+      "aliases": [
+        "amvara10 scripts",
+        "amvara 10 ops"
+      ],
+      "active": true
+    },
+    {
+      "id": "km0-web",
+      "kind": "web",
+      "path": "/opt/km0-web",
+      "summary": "KM0 Digital public marketing site (Astro) + ideas webhook receiver systemd.",
+      "context": "contexts/km0-web",
+      "aliases": [
+        "km0",
+        "km0digital",
+        "km0 web"
+      ],
+      "active": true,
+      "autoagents": {
+        "enabled": true,
+        "rel_dir": "autoagents",
+        "loop": "autoagents-loop.sh"
+      },
+      "redmine_doc_issue_id": 7529
+    },
+    {
+      "id": "km0-mail",
+      "kind": "web",
+      "path": "/opt/km0-mail",
+      "summary": "KM0 self-hosted mail stack (Postfix, Dovecot, Rspamd, Roundcube, Postgres).",
+      "context": "contexts/km0-mail",
+      "aliases": [
+        "mail.km0digital",
+        "km0 mail"
+      ],
+      "active": true,
+      "autoagents": {
+        "enabled": true,
+        "rel_dir": "autoagents",
+        "loop": "autoagents-loop.sh"
+      },
+      "redmine_doc_issue_id": 7605
+    },
+    {
+      "id": "km0-auth",
+      "kind": "web",
+      "path": "/opt/km0-auth",
+      "summary": "KM0 Auth Hub (login/register at auth.km0digital.com). Sibling: OpenCloud Dex under opencloud.",
+      "context": "contexts/km0-auth",
+      "aliases": [
+        "auth.km0digital",
+        "km0 auth",
+        "auth-hub"
+      ],
+      "active": true
+    },
+    {
+      "id": "opencloud",
+      "kind": "web",
+      "path": "/opt/opencloud",
+      "summary": "OpenCloud + Collabora + Dex + register-api on amvara10. Sibling auth hub: km0-auth.",
+      "context": "contexts/opencloud",
+      "aliases": [
+        "cloud.km0digital",
+        "open-cloud",
+        "km0-cloud"
+      ],
+      "active": true,
+      "autoagents": {
+        "enabled": true,
+        "rel_dir": "autoagents",
+        "loop": "autoagents-loop.sh"
+      },
+      "redmine_doc_issue_id": 7530
+    },
+    {
+      "id": "sunday-updates",
+      "kind": "ops",
+      "path": "/opt/amvara/sunday-updates",
+      "summary": "Amvara sunday-updates tooling/docs on amvara10 (not a live app runtime).",
+      "context": "contexts/sunday-updates",
+      "aliases": [
+        "sunday updates",
+        "amvara-sunday"
+      ],
+      "active": true
+    }
+  ]
+}

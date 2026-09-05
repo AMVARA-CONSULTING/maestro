@@ -1,0 +1,56 @@
+{
+  "host": "amvara3",
+  "description": "Amvara3: Redmine test stack, HAProxy, auxiliary DBs, ops. Cometa prod shut down (data retained, out of catalog). Reach with ssh amvara3.",
+  "ssh_alias": "amvara3",
+  "projects": [
+    {
+      "id": "amvara3-ops",
+      "kind": "ops",
+      "path": "/home/amvara/projects/scripts",
+      "summary": "Host maintenance on amvara3: disk/journal alerts, renew, backups.",
+      "context": "contexts/amvara3-ops",
+      "aliases": [
+        "amvara3 scripts",
+        "amvara 3 ops"
+      ],
+      "active": true
+    },
+    {
+      "id": "redmine",
+      "kind": "web",
+      "path": "/home/amvara/projects/redmine",
+      "summary": "Redmine on amvara3 (live behind stunnel; MaestroBot #8066). Not the disabled amvara2 Docker.",
+      "context": "contexts/redmine",
+      "aliases": [
+        "amvara3-redmine",
+        "redmine-amvara3"
+      ],
+      "active": true
+    },
+    {
+      "id": "haproxy",
+      "kind": "web",
+      "path": "/home/gitlab-runner/haproxy",
+      "summary": "HAProxy reverse proxy stack on amvara3 (Docker Compose).",
+      "context": "contexts/haproxy",
+      "aliases": [
+        "amvara3-haproxy",
+        "haproxy-amvara3"
+      ],
+      "active": true
+    },
+    {
+      "id": "amvara3-dbs",
+      "kind": "ops",
+      "path": "/var/www/cometa/db",
+      "summary": "Auxiliary DB containers on amvara3 (MySQL, Mongo, and related compose ymls under cometa/db).",
+      "context": "contexts/amvara3-dbs",
+      "aliases": [
+        "aux-dbs",
+        "amvara3 db",
+        "amvara3 databases"
+      ],
+      "active": true
+    }
+  ]
+}

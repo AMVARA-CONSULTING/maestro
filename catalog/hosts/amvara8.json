@@ -1,0 +1,43 @@
+{
+  "host": "amvara8",
+  "description": "Amvara GPU/AI host: Ollama, amvara.ai (read-only in Maestro), VPN (OpenVPN+WireGuard), ops. Reach with ssh amvara8 (fallback via amvara4).",
+  "ssh_alias": "amvara8",
+  "projects": [
+    {
+      "id": "amvara8-ops",
+      "kind": "ops",
+      "path": "/home/amvara/projects/scripts",
+      "summary": "Host maintenance on amvara8: disk/journal alerts, housekeeping, renew. VPN client helpers live here; VPN services → amvara8-vpn.",
+      "context": "contexts/amvara8-ops",
+      "aliases": ["amvara8 scripts", "amvara 8 ops"],
+      "active": true
+    },
+    {
+      "id": "amvara8-vpn",
+      "kind": "ops",
+      "path": "/etc/openvpn",
+      "summary": "Amvara8 VPN: OpenVPN server (tun0) + WireGuard wg0. Configs under /etc/openvpn and /etc/wireguard.",
+      "context": "contexts/amvara8-vpn",
+      "aliases": ["amvara vpn", "openvpn", "wireguard", "amvara8 openvpn"],
+      "active": true
+    },
+    {
+      "id": "ollama",
+      "kind": "ops",
+      "path": "/data/ollama",
+      "summary": "Host Ollama service on amvara8 (models/data). Used by fleet (e.g. d-writer writer model).",
+      "context": "contexts/ollama",
+      "aliases": ["amvara8-ollama", "ollama.service"],
+      "active": true
+    },
+    {
+      "id": "amvara-ai",
+      "kind": "bot",
+      "path": "/data/amvara.ai",
+      "summary": "My.ai / amvara.ai (Nemotron Discord co-pilot). Maestro: inspect-only unless Luipy explicitly orders an edit.",
+      "context": "contexts/amvara-ai",
+      "aliases": ["amvara.ai", "my.ai", "nemotron", "amvaraai"],
+      "active": true
+    }
+  ]
+}

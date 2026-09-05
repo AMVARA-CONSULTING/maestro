@@ -1,0 +1,25 @@
+{
+  "host": "amvara6",
+  "description": "Amvara6: Selenium Chrome lab + ops. Cognos/other stacks present but out of this catalog scope. Reach with ssh amvara6 (hop via amvara4 if direct fails).",
+  "ssh_alias": "amvara6",
+  "projects": [
+    {
+      "id": "amvara6-ops",
+      "kind": "ops",
+      "path": "/home/amvara/projects/scripts",
+      "summary": "Host maintenance on amvara6: disk checks and related Amvara scripts.",
+      "context": "contexts/amvara6-ops",
+      "aliases": ["amvara6 scripts", "amvara 6 ops"],
+      "active": true
+    },
+    {
+      "id": "selenium-chrome",
+      "kind": "ops",
+      "path": "/root/cognos_containerization/cognos-podman-deployment",
+      "summary": "Selenium standalone Chrome container on amvara6 (compose docker-compose-selenium-chrome.yml).",
+      "context": "contexts/selenium-chrome",
+      "aliases": ["selenium", "chrome-selenium", "amvara6-selenium"],
+      "active": true
+    }
+  ]
+}

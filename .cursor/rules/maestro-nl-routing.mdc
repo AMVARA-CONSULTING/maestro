@@ -1,0 +1,27 @@
+---
+description: Maestro natural-language @mention routing via cursor-agent
+alwaysApply: true
+---
+
+# Maestro: natural language (phase 1)
+
+## Behavior
+
+- **Trigger:** `@Maestro` or **reply** to a Maestro message.
+- **Who:** Luipy only.
+- **Where:** configured Maestro `channel_id` only.
+- **Engine:** cursor-agent router (`prompts/nl-router.md`), **not** Gemma/OpenAI.
+- **Policy:** try `help` / `ping` / `list_projects` / `restart_maestro` (only if they explicitly ask to restart **Maestro/this bot now**) / `ca_persist` or `ca`; on unclear / parse error / timeout → **fallback to `ca_persist`** with the user text. If unsure between one-shot `ca` and persist, prefer **`ca_persist`**.
+
+## Intents
+
+Default: **do not** request privileged Message Content (`DISCORD_MESSAGE_CONTENT_INTENT=0`) so the bot can start before the portal toggle is on.
+
+- **@mention** usually includes message content without the privileged intent.
+- **Reply to bot** without a mention may need the portal **Message Content** toggle, then set `DISCORD_MESSAGE_CONTENT_INTENT=1` and ask the operator to `/restart_maestro`.
+
+## Do not
+
+- Route through Gemma or other `llm_chain` backends.
+- Invent phase-2 domain commands in the NL allowlist (beyond the documented slash set).
+- Restart `maestro.service` from an agent; operators use `/restart_maestro`.

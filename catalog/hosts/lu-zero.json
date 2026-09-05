@@ -1,0 +1,194 @@
+{
+  "host": "lu-zero",
+  "description": "Primary Luipy host (this machine). Maestro catalog scope for phase 2.",
+  "projects": [
+    {
+      "id": "maestro",
+      "kind": "bot",
+      "path": "/root/bots/maestro",
+      "summary": "Discord ultra-orchestrator (slash, NL, cursor-agent) for Luipy ops.",
+      "context": "contexts/maestro",
+      "aliases": [
+        "maestro-bot"
+      ],
+      "active": true,
+      "redmine_doc_issue_id": 8066
+    },
+    {
+      "id": "tor",
+      "kind": "bot",
+      "path": "/root/bots/tor",
+      "summary": "Discord audiTor bot: fleet /audit and /ca via cursor-agent (Luipy only).",
+      "context": "contexts/tor",
+      "aliases": [
+        "auditor",
+        "auditor-bot"
+      ],
+      "active": true
+    },
+    {
+      "id": "serra-prod",
+      "kind": "web",
+      "path": "/srv/serra/prod",
+      "summary": "Serra ecommerce production stack (Laravel + React, Docker compose).",
+      "context": "contexts/serra",
+      "aliases": [
+        "serra",
+        "serra production",
+        "serra-production"
+      ],
+      "active": true,
+      "autoagents": {
+        "enabled": true,
+        "rel_dir": "source/autoagents",
+        "loop": "autoagents-loop.sh"
+      }
+    },
+    {
+      "id": "serra-style",
+      "kind": "web",
+      "path": "/srv/serra/style",
+      "summary": "Serra style environment (design/staging-style Docker stack).",
+      "context": "contexts/serra",
+      "aliases": [
+        "style",
+        "serra style"
+      ],
+      "active": true,
+      "autoagents": {
+        "enabled": true,
+        "rel_dir": "source/agents",
+        "loop": "laravel-ecommerce-agent-loop.sh"
+      }
+    },
+    {
+      "id": "serra-stage",
+      "kind": "web",
+      "path": "/srv/serra/stage",
+      "summary": "Serra stage environment (pre-prod Docker stack).",
+      "context": "contexts/serra",
+      "aliases": [
+        "stage",
+        "serra staging",
+        "serra-staging"
+      ],
+      "active": true,
+      "autoagents": {
+        "enabled": true,
+        "rel_dir": "source/autoagents",
+        "loop": "autoagents-loop.sh"
+      }
+    },
+    {
+      "id": "llja",
+      "kind": "web",
+      "path": "/srv/llja",
+      "summary": "LaLiga Julio Anguita official site (FastAPI + static admin/front, Docker).",
+      "context": "contexts/llja",
+      "aliases": [
+        "laliga",
+        "julio anguita",
+        "la liga"
+      ],
+      "active": true
+    },
+    {
+      "id": "howtohome",
+      "kind": "context-pack",
+      "path": "/root/howtohome",
+      "summary": "How to reach the home PC from lu-zero via SSH reverse tunnel (ssh home).",
+      "context": "contexts/howtohome",
+      "aliases": [
+        "home",
+        "home-pc",
+        "luipy-pc"
+      ],
+      "active": true
+    },
+    {
+      "id": "helio03",
+      "kind": "web",
+      "path": "/var/www/helio03.ldeluipy.es",
+      "summary": "Helio-3 web presence (play/releases landing under helio03.ldeluipy.es).",
+      "context": "contexts/helio03",
+      "aliases": [
+        "helio-3",
+        "helio 3",
+        "helio03.ldeluipy.es"
+      ],
+      "active": true
+    },
+    {
+      "id": "vault",
+      "kind": "web",
+      "path": "/var/www/vault.ldeluipy.es",
+      "summary": "Design/layout vault site (catalogue of UI experiments on vault.ldeluipy.es).",
+      "context": "contexts/vault",
+      "aliases": [
+        "vault.ldeluipy.es"
+      ],
+      "active": true
+    },
+    {
+      "id": "ldeluipy-es",
+      "kind": "web",
+      "path": "/var/www/ldeluipy.es",
+      "summary": "Personal/landing site for ldeluipy.es.",
+      "context": "contexts/ldeluipy-es",
+      "aliases": [
+        "ldeluipy",
+        "ldeluipy.es"
+      ],
+      "active": true
+    },
+    {
+      "id": "mcd",
+      "kind": "ops",
+      "path": "/var/www/mcd.lu-zero.ldeluipy.es",
+      "summary": "Master Control Dashboard (MCD) for lu-zero project overview.",
+      "context": "contexts/mcd",
+      "aliases": [
+        "master-control",
+        "master control dashboard"
+      ],
+      "active": true
+    },
+    {
+      "id": "automail",
+      "kind": "web",
+      "path": "/var/www/automail.lu-zero.ldeluipy.es",
+      "summary": "Automail helper site/API on automail.lu-zero.ldeluipy.es.",
+      "context": "contexts/automail",
+      "aliases": [
+        "automail.lu-zero"
+      ],
+      "active": true
+    },
+    {
+      "id": "webs-misc",
+      "kind": "web",
+      "path": "/var/www",
+      "summary": "Small lu-zero vhosts (ping, stats, catchall, html, test, empty stubs) not listed separately.",
+      "context": "contexts/webs-misc",
+      "aliases": [
+        "var-www",
+        "misc webs",
+        "small sites"
+      ],
+      "active": true
+    },
+    {
+      "id": "lu-zero-ops",
+      "kind": "ops",
+      "path": "/root/scripts",
+      "summary": "Host maintenance scripts on lu-zero (disk/journal alerts, docker prune, SSL helpers).",
+      "context": "contexts/lu-zero-ops",
+      "aliases": [
+        "zero-ops",
+        "lu-zero scripts",
+        "lu zero ops"
+      ],
+      "active": true
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "host": "amvara2",
+  "description": "Amvara hub: amvara.de site, GitLab, HAProxy, Sentry, stunnel-redmine (client to amvara3), ops. SSH typically port 60022. Reach with ssh amvara2 (fallback via amvara4).",
+  "ssh_alias": "amvara2",
+  "projects": [
+    {
+      "id": "amvara2-ops",
+      "kind": "ops",
+      "path": "/home/amvara/projects/scripts",
+      "summary": "Host maintenance on amvara2: disk/journal alerts, certbot, gitlab version check, backups.",
+      "context": "contexts/amvara2-ops",
+      "aliases": [
+        "amvara2 scripts",
+        "amvara 2 ops"
+      ],
+      "active": true
+    },
+    {
+      "id": "stunnel-redmine",
+      "kind": "ops",
+      "path": "/home/amvara/projects/stunnel-redmine",
+      "summary": "Stunnel Redmine client on amvara2 tunneling to amvara3 Redmine (local Redmine containers disabled).",
+      "context": "contexts/stunnel-redmine",
+      "aliases": [
+        "stunnel redmine",
+        "redmine-stunnel",
+        "amvara2-stunnel"
+      ],
+      "active": true
+    },
+    {
+      "id": "amvara-de",
+      "kind": "web",
+      "path": "/root/work/amvara-2.0",
+      "summary": "Company site amvara.de (Angular + optional Python backend). Not amvara.com.",
+      "context": "contexts/amvara-de",
+      "aliases": [
+        "amvara.de",
+        "amvara site",
+        "amvara-2.0",
+        "amvara website"
+      ],
+      "active": true,
+      "autoagents": {
+        "enabled": true,
+        "rel_dir": "autoagents",
+        "loop": "autoagents-loop.sh"
+      }
+    },
+    {
+      "id": "econsultants",
+      "kind": "web",
+      "path": "/home/amvara/projects/econsultants",
+      "summary": "Static marketing site econsultants.es (HTML/CSS/JS; wind + rail consulting). GitLab issues + autoagents.",
+      "context": "contexts/econsultants",
+      "aliases": [
+        "econsultants.es",
+        "e-consultants",
+        "e consultants"
+      ],
+      "active": true,
+      "autoagents": {
+        "enabled": true,
+        "rel_dir": "agents",
+        "loop": "agent-loop.sh"
+      }
+    },
+    {
+      "id": "gitlab",
+      "kind": "web",
+      "path": "/home/amvara/projects/gitlab",
+      "summary": "GitLab CE stack on amvara2 (gitlab_node_new + postgres + redis).",
+      "context": "contexts/gitlab",
+      "aliases": [
+        "amvara2-gitlab",
+        "gitlab-ce"
+      ],
+      "active": true
+    },
+    {
+      "id": "amvara2-haproxy",
+      "kind": "web",
+      "path": "/home/amvara/projects/haproxy",
+      "summary": "HAProxy edge on amvara2 (80/443, host network, certs-ssl). Distinct from amvara3 haproxy.",
+      "context": "contexts/amvara2-haproxy",
+      "aliases": [
+        "haproxy-amvara2",
+        "amvara2 haproxy"
+      ],
+      "active": true
+    },
+    {
+      "id": "sentry",
+      "kind": "web",
+      "path": "/home/amvara/projects/sentry",
+      "summary": "Sentry error-tracking stack on amvara2 (sentry + worker + cron + redis + postgres).",
+      "context": "contexts/sentry",
+      "aliases": [
+        "amvara2-sentry",
+        "sentry-amvara2"
+      ],
+      "active": true
+    },
+    {
+      "id": "chrome-mcp",
+      "kind": "ops",
+      "path": "/home/amvara/projects/chrome-mcp",
+      "summary": "Headless Chrome + DevTools MCP on amvara2 (CDP 9222). Preferred browser for Maestro agents.",
+      "context": "contexts/chrome-mcp",
+      "aliases": [
+        "chrome mcp",
+        "devtools-mcp",
+        "amvara2-chrome",
+        "browser-mcp"
+      ],
+      "active": true
+    }
+  ]
+}

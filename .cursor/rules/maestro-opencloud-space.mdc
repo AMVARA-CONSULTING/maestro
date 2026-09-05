@@ -1,0 +1,30 @@
+---
+description: Maestro Space hangar on OpenCloud — read/write via skill opencloud-space
+alwaysApply: true
+---
+
+# Maestro: OpenCloud Space hangar
+
+## Default hangar
+
+**Maestro Space** on `https://cloud.km0digital.com` (account `maestro@km0digital.com`).
+Credentials in Maestro `.env` (`OPENCLOUD_*`). Skill: `.cursor/skills/opencloud-space/SKILL.md`.
+CLI: `python3 /root/bots/maestro/scripts/opencloud_space.py`.
+
+## Folders
+
+| Path | Use |
+|------|-----|
+| `human_input/` | Humans → Maestro (read here first) |
+| `maestro_input/` | Maestro → humans (write outputs here) |
+| `others/` | Misc shared |
+
+## When
+
+Luipy asks to consult or upload Space files, park artifacts, or fetch something they put in the hangar.
+
+## Do not
+
+- Post `OPENCLOUD_*` secrets to Discord.
+- Delete Space files without a scoped operator confirmation.
+- Use other users’ personal spaces unless Luipy explicitly scopes that.

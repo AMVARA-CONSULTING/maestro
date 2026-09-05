@@ -1,0 +1,38 @@
+{
+  "host": "amvara9",
+  "description": "Satisfecho / POS host (amvara9, satisfecho.de). Catalog: pos + ops only. Reach with ssh amvara9 from Maestro (fallback via amvara4 if needed).",
+  "ssh_alias": "amvara9",
+  "projects": [
+    {
+      "id": "amvara9-ops",
+      "kind": "ops",
+      "path": "/root/scripts",
+      "summary": "Host maintenance on amvara9: docker/status checks, Satisfecho 500 probe, plus Amvara disk/journal scripts under /etc/misc/amvara/scripts.",
+      "context": "contexts/amvara9-ops",
+      "aliases": [
+        "amvara9 scripts",
+        "amvara 9 ops",
+        "satisfecho-ops"
+      ],
+      "active": true
+    },
+    {
+      "id": "pos",
+      "kind": "web",
+      "path": "/development/pos",
+      "summary": "Satisfecho restaurant POS (Angular + FastAPI + PostgreSQL + Redis + HAProxy).",
+      "context": "contexts/pos",
+      "aliases": [
+        "satisfecho",
+        "pos2",
+        "satisfecho-pos"
+      ],
+      "active": true,
+      "autoagents": {
+        "enabled": true,
+        "rel_dir": "agents",
+        "loop": "pos-cursor-loop.sh"
+      }
+    }
+  ]
+}

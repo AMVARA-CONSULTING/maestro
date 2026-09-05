@@ -1,0 +1,22 @@
+[Unit]
+Description=Maestro (Discord /ca cursor-agent bot for Luipy)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/bots/maestro
+Environment=PYTHONPATH=/root/bots/maestro
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/root/bots/maestro/.env
+ExecStart=/root/bots/maestro/.venv/bin/python -m maestro
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+KillMode=mixed
+StandardOutput=append:/root/bots/maestro/maestro.log
+StandardError=append:/root/bots/maestro/maestro.log
+
+[Install]
+WantedBy=multi-user.target

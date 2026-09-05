@@ -1,0 +1,44 @@
+---
+description: Patch-bump Maestro version on runtime changes; CONTEXT/docs exempt
+alwaysApply: true
+---
+
+# Maestro: version bump (dumb patch)
+
+Single source of truth: **`maestro/__init__.py`** `__version__`.
+
+## Bump when
+
+On changes to **runtime / shipping** surfaces, increment the patch (`0.1.0` → `0.1.1`) in the same turn:
+
+- `maestro/**/*.py`
+- `systemd/maestro.service`
+- `.env` shape / `config.json` examples that affect boot
+- Slash/NL wiring that ships with the bot
+
+## Do **not** bump for
+
+- `contexts/**` only
+- `.cursor/rules/**` or `.cursor/skills/**` only
+- `prompts/**` only (unless paired with code that requires a release note)
+- README / markdown docs only
+- Purely local experiments the operator does not want numbered
+
+## When the user explicitly asks
+
+- **Minor** (`0.1.x` → `0.2.0`) only if they ask for minor / batch release.
+- **Major** (`0.x.y` → `1.0.0`) only if they ask for major / 1.0.
+
+If they only say "bump version" without major/minor, treat it as **patch**.
+
+## Discord presence
+
+`on_ready` must set presence to **Watching** `v{__version__}`. Keep that string derived from `__version__`; never hardcode a stale version in the activity name.
+
+Presence only updates after the operator runs **`/restart_maestro`** (agents must not restart the service).
+
+## Checklist (when bumping)
+
+- [ ] `maestro/__init__.py` `__version__` bumped
+- [ ] Watching activity still uses `f"v{__version__}"`
+- [ ] Tell operator to `/restart_maestro` if runtime code changed

@@ -1,0 +1,16 @@
+{
+  "host": "lu-oracle",
+  "description": "Oracle Cloud VM (ldeluipy). Apache + MariaDB personal/webs fleet. Low RAM (~1 GiB); operate via ssh lu-oracle from Maestro. Catalog intentionally ops-only for maintenance.",
+  "ssh_alias": "lu-oracle",
+  "projects": [
+    {
+      "id": "lu-oracle-ops",
+      "kind": "ops",
+      "path": "/home/ubuntu/scripts",
+      "summary": "Host maintenance on lu-oracle: disk checks, deploy helpers, SSL helpers. Resource-constrained VM.",
+      "context": "contexts/lu-oracle-ops",
+      "aliases": ["oracle-ops", "lu-oracle scripts", "oracle ops", "ldeluipy-oracle"],
+      "active": true
+    }
+  ]
+}

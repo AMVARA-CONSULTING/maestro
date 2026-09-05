@@ -1,0 +1,38 @@
+---
+description: Maestro catalog + CONTEXT packs; project detail lives in each repo
+alwaysApply: true
+---
+
+# Maestro: catalog and context packs (phase 2)
+
+## Catalog (existence)
+
+- Source of truth for **what exists**: `catalog/hosts/<host>.json` (JSON), loaded as a multi-host index.
+- `/list_projects` host is a Discord **choice** (`all`, `lu-zero`, `lu-one`, …). Omit = all hosts, sectioned.
+- cursor-agent **always** runs on the Maestro host; remote catalog hosts are operated via SSH from the agent session.
+- Minecraft on **lu-zero** stays out of catalog (backup/off). Live MC is catalogued on **lu-one**.
+- Ops: per-host `*-ops` entries (`lu-zero-ops`, `lu-one-ops`, …).
+
+## Context packs (minimum map)
+
+- Path: `contexts/<id>/CONTEXT.md` (English).
+- Pack = short map + where to look next.
+- **Detailed** rules/skills/AGENTS live in the **project directory**; Maestro reuses them when the workspace is bound to that path.
+- Serra: three catalog ids (`serra-prod`, `serra-style`, `serra-stage`), **one** shared pack `contexts/serra/`.
+
+## When changing catalog
+
+Update the matching `CONTEXT.md` (or create it) in the same change. Sync `/help` and NL router if commands change.
+
+## Redmine documentation tickets
+
+Optional per-project field in `catalog/hosts/<host>.json`:
+
+```json
+"redmine_doc_issue_id": 7530
+```
+
+- Appears in `/list_projects` as `RM#7530`.
+- Injected into persist `/ca` session context.
+- Used by MaestroBot close notes on `/thread_end` (plus any `#issue` ids mentioned in the thread).
+- Skill: `.cursor/skills/redmine-notes/SKILL.md`.

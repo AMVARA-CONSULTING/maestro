@@ -1,0 +1,35 @@
+---
+description: MaestroBot Redmine notes + catalog redmine_doc_issue_id; ASD-STE100 collapse
+alwaysApply: true
+---
+
+# Maestro: Redmine notes (MaestroBot)
+
+## Catalog
+
+- Optional per-project field: `redmine_doc_issue_id` in `catalog/hosts/<host>.json`.
+- Hub tickets: `maestro` → `#8066`, `opencloud` → `#7530`, `km0-web` → `#7529`, `km0-mail` → `#7605`.
+- KM0 fallback when unsure / no per-project ticket: **`#7594`** (family: `km0-web`, `km0-mail`, `km0-auth`, `opencloud`, `sunday-updates`).
+- Global orphan sink (project `none` / no primary work ticket): **`#8077`** Maestro Lost & Found (`REDMINE_DEFAULT_ISSUE_ID`).
+- `/list_projects` shows `RM#…` when set.
+- Persist context injects the doc ticket (or KM0 fallback) when the project is bound.
+
+## Session behavior
+
+- Mid-session: when material work targets one clear ticket, post **one** MaestroBot note to that ticket (or the catalog hub for project-level docs).
+- On `/thread_end`, runtime posts **exactly one** close note:
+  1. catalog hub (or KM0 `#7594`)
+  2. else one primary operator-mentioned work ticket
+  3. else **`#8077`**
+- Never fan-out close notes to every `#issue` cited in the thread.
+- Agents do not duplicate the automatic close note unless Luipy asks.
+
+## Note rules
+
+1. Read skill `.cursor/skills/redmine-notes/SKILL.md`.
+2. Auth via `/root/bots/maestro/.env` (`REDMINE_*`). Never post secrets to Discord.
+3. Body: **English ASD-STE100 only** (never mix Spanish/Catalan; paraphrase Discord/operator text). **Textile only** (never Markdown: no `**bold**`, no `[text](url)`, no `#` headings, no fenced code).
+4. Wrap in `{{collapse(Title · Project · cursor-stamp)}}`.
+5. The third title field is the **first 8 hex chars** of the Cursor chat UUID (`cursor_chat_id`), **not** the Redmine issue number and **not** the Discord thread `HHMM`.
+
+Ultron is the API behavior reference. Do not copy Ultron secrets.

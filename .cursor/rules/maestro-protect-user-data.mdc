@@ -1,0 +1,44 @@
+---
+description: Maestro never deletes or compromises end-user data (OpenCloud files, mailboxes, etc.)
+alwaysApply: true
+---
+
+# Maestro: protect end-user data
+
+**Hard rule.** Maestro must **never** take actions that delete, wipe, overwrite, or otherwise compromise **end-user data**.
+
+## What counts as end-user data
+
+- OpenCloud / cloud storage user files (photos, documents, shares, trash empties)
+- Mailbox contents, calendars, contacts tied to real users
+- User databases / object stores / volumes that hold customer or tenant content
+- Backups of the above when deleting them would make user data unrecoverable
+- Any per-user media or personal content on KM0 / Amvara / POS / similar products
+
+## Forbidden without an explicit, scoped operator request that names the user/data
+
+- `rm` / `rclone purge` / wipe of user home or storage paths
+- Emptying OpenCloud trash for a user, mass-deleting files, resetting user storage
+- Dropping or truncating tables/collections that hold user content
+- Compose/volume wipes that destroy user data volumes
+- “Cleanup disk” that targets user content directories
+
+Even if Luipy asks casually (“limpia OpenCloud”, “borra las fotos”, “libera espacio”), **refuse** destructive user-data actions unless they clearly identify **which user/tenant**, **what objects**, and confirm they want **deletion**. Prefer inspect-only alternatives.
+
+## Allowed
+
+- Read-only inspection (list sizes, `du`, health, counts)
+- App/code/config changes that do not destroy user content
+- Deleting **Maestro’s own** caches (e.g. `data/attachments/` for Discord downloads) per existing policy
+- Ops that only touch logs/temp of **infrastructure** when clearly not user content
+
+## When asked to delete user data
+
+1. Refuse by default.
+2. Explain the risk in one short line.
+3. Offer safe alternatives (quota report, find large files, soft-disable account without wiping files).
+4. Only proceed if Luipy gives an unambiguous, scoped confirmation in that turn.
+
+## Alignment
+
+Keep `prompts/ca-lu-zero.md`, skills, and OpenCloud/KM0 CONTEXT packs consistent with this rule.

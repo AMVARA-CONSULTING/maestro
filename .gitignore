@@ -1,0 +1,19 @@
+# Secrets and local runtime
+.env
+.venv/
+data/
+__pycache__/
+*.pyc
+*.pyo
+*.log
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.DS_Store
+
+# Optional local overrides (keep committed config.json as the default shape)
+config.local.json
+
+# Restart hint (host-only)
+data/restart-pending

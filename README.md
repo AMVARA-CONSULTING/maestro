@@ -1,5 +1,9 @@
 # Maestro
 
+<p align="center">
+  <img src="docs/maestro.png" alt="Maestro" width="280" />
+</p>
+
 Discord bot that runs slash commands and natural-language ops through cursor-agent.
 
 Admin-only. Resolves work via a multi-host project catalog and short context packs.

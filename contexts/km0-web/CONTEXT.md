@@ -49,5 +49,6 @@ On amvara10: `README.md`, `docs/`, `CONTRIBUTING.md`, project `.cursor/` / agent
 
 - Prefer smallest change; confirm compose/service before restart.
 - Ideas-receiver changes stay in this project scope (systemd + hooks under `/opt/km0-web`).
+- Ideas autoissue: cursor-agent drafts then `gh issue create`. If cursor (or draft create) fails, `scripts/autoissue-raw-fallback.sh` opens a raw issue with label `waiting for human validation` and sends AutoMail. Prefer host `gh` auth over a fine-grained `GH_TOKEN` that lacks org approval (`createIssue`).
 - **Autoagents:** when asked for a task, write under `autoagents/tasks/` per `TASKS-README.md`, verify/start the loop, notify. No confirmation wait unless Luipy asked to discuss first.
 - Never post secrets to Discord.

@@ -22,9 +22,9 @@ class StopCaView(discord.ui.View):
         self.thread_id = thread_id
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if not self.bot._is_luipy(interaction.user.id):
+        if not self.bot._is_allowed(interaction.user.id):
             await interaction.response.send_message(
-                "Maestro only responds to **Luipy**.",
+                "Maestro only responds to **allowlisted** operators.",
                 ephemeral=True,
             )
             return False
@@ -64,9 +64,9 @@ class ResumeFailView(discord.ui.View):
         self.thread_id = thread_id
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        if not self.bot._is_luipy(interaction.user.id):
+        if not self.bot._is_allowed(interaction.user.id):
             await interaction.response.send_message(
-                "Maestro only responds to **Luipy**.",
+                "Maestro only responds to **allowlisted** operators.",
                 ephemeral=True,
             )
             return False

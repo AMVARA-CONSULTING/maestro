@@ -13,7 +13,12 @@
         "channel_id": 1545493623259398284
       }
     ],
-    "allowed_user_id": 488728568457854976,
+    "thread_home_channel_id": 1545493623259398284,
+    "allowed_user_ids": [
+      488728568457854976,
+      782038381818937384,
+      687953899566530588
+    ],
     "application_id": 1543637303354728458,
     "nl_commands": true,
     "message_content_intent": true
@@ -25,7 +30,7 @@
   "cursor_agent": {
     "enabled": true,
     "bin_path": "/root/.local/bin/cursor-agent",
-    "timeout_seconds": 900,
+    "timeout_seconds": 1200,
     "workspace": "/root"
   },
   "host": {

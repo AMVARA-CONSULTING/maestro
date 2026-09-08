@@ -60,7 +60,7 @@ Auth is WebDAV Basic (`user` + **app token**) against the public cloud URL from 
 - **No secrets on Discord** (tokens, passwords, `.env`).
 - **Protect user data:** do not delete/wipe Space contents unless Luipy scopes a specific delete.
 - Prefer **read** `human_input/`; prefer **write** `maestro_input/`.
-- Images for Discord replies: download then copy PNG/JPEG to the session `data/outbound/<thread_id>/` when Luipy should see them.
+- Files for Discord replies: copy allowed artifacts (PNG/JPEG, JSON, HTML, …) to the session `data/outbound/<thread_id>/` when Luipy should see them.
 
 ## Related
 

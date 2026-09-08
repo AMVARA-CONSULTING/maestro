@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Maestro runtime map",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "operator-path",
+        "label": "Operator request path",
+        "focus": ["luipy", "discord", "maestro", "catalog", "cursor"],
+        "note": "Primary path from Luipy through Discord into Maestro and cursor-agent."
+      },
+      {
+        "id": "fleet-reach",
+        "label": "Fleet reach",
+        "focus": ["maestro", "cursor", "fleet", "chrome"],
+        "note": "cursor-agent runs on lu-zero and reaches catalog hosts over SSH."
+      },
+      {
+        "id": "side-tools",
+        "label": "Side tools",
+        "focus": ["maestro", "redmine", "opencloud", "archify"],
+        "note": "Durable trail, file hangar, and diagram generation beside the main path."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "luipy",
+      "type": "external",
+      "label": "Luipy",
+      "sublabel": "Operator",
+      "pos": [40, 280],
+      "size": [120, 60]
+    },
+    {
+      "id": "discord",
+      "type": "external",
+      "label": "Discord",
+      "sublabel": "slash / NL / threads",
+      "pos": [220, 280],
+      "size": [140, 60],
+      "brand": "discord"
+    },
+    {
+      "id": "maestro",
+      "type": "backend",
+      "label": "Maestro",
+      "sublabel": "bot · lu-zero",
+      "pos": [430, 280],
+      "size": [140, 64],
+      "tag": "v0.4.16"
+    },
+    {
+      "id": "catalog",
+      "type": "database",
+      "label": "Catalog",
+      "sublabel": "hosts · projects",
+      "pos": [430, 120],
+      "size": [140, 60]
+    },
+    {
+      "id": "cursor",
+      "type": "backend",
+      "label": "cursor-agent",
+      "sublabel": "/ca · persist",
+      "pos": [650, 280],
+      "size": [150, 64]
+    },
+    {
+      "id": "fleet",
+      "type": "cloud",
+      "label": "Fleet hosts",
+      "sublabel": "SSH catalog",
+      "pos": [870, 280],
+      "size": [150, 64]
+    },
+    {
+      "id": "chrome",
+      "type": "cloud",
+      "label": "chrome-mcp",
+      "sublabel": "amvara2 CDP",
+      "pos": [870, 120],
+      "size": [150, 60]
+    },
+    {
+      "id": "redmine",
+      "type": "external",
+      "label": "Redmine",
+      "sublabel": "MaestroBot notes",
+      "pos": [430, 440],
+      "size": [140, 60]
+    },
+    {
+      "id": "opencloud",
+      "type": "cloud",
+      "label": "OpenCloud",
+      "sublabel": "Maestro Space",
+      "pos": [650, 440],
+      "size": [150, 60]
+    },
+    {
+      "id": "archify",
+      "type": "backend",
+      "label": "Archify",
+      "sublabel": "/root/outils",
+      "pos": [870, 440],
+      "size": [150, 60]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "lu-zero · Maestro home",
+      "wraps": ["maestro", "catalog", "cursor", "archify"]
+    },
+    {
+      "kind": "security-group",
+      "label": "allowlisted operators",
+      "wraps": ["discord", "maestro"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "luipy-discord",
+      "from": "luipy",
+      "to": "discord",
+      "label": "ops request",
+      "variant": "emphasis"
+    },
+    {
+      "id": "discord-maestro",
+      "from": "discord",
+      "to": "maestro",
+      "label": "bot API"
+    },
+    {
+      "id": "maestro-catalog",
+      "from": "maestro",
+      "to": "catalog",
+      "label": "resolve project",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDy": -58
+    },
+    {
+      "id": "maestro-cursor",
+      "from": "maestro",
+      "to": "cursor",
+      "label": "spawn /ca"
+    },
+    {
+      "id": "cursor-fleet",
+      "from": "cursor",
+      "to": "fleet",
+      "label": "SSH"
+    },
+    {
+      "id": "cursor-chrome",
+      "from": "cursor",
+      "to": "chrome",
+      "label": "MCP browser",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "left",
+      "labelDy": -40
+    },
+    {
+      "id": "maestro-redmine",
+      "from": "maestro",
+      "to": "redmine",
+      "label": "journal notes",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 58
+    },
+    {
+      "id": "cursor-opencloud",
+      "from": "cursor",
+      "to": "opencloud",
+      "label": "WebDAV hangar",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 58
+    },
+    {
+      "id": "cursor-archify",
+      "from": "cursor",
+      "to": "archify",
+      "label": "render map",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "left"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Core",
+      "items": [
+        "Discord slash, NL, and persist threads",
+        "Catalog binds host + context pack",
+        "cursor-agent always runs on lu-zero"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Reach",
+      "items": [
+        "SSH to catalog hosts for project work",
+        "chrome-mcp on amvara2 for real browser",
+        "Archify for validated system maps"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Safety",
+      "items": [
+        "No secrets on Discord",
+        "No end-user data wipes without scoped OK",
+        "Never restart Maestro from the agent"
+      ]
+    }
+  ]
+}

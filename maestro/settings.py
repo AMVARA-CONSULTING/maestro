@@ -23,6 +23,14 @@ class DiscordHome:
     channel_id: int
 
 
+# Primary operator (Luipy). Always kept on the allowlist; sole restart authority.
+LUIPY_DISCORD_ID = 488728568457854976
+
+
+# Default persist-thread parent when config/env omit thread_home_channel_id.
+_DEFAULT_THREAD_HOME_CHANNEL_ID = 1545493623259398284
+
+
 @dataclass(frozen=True)
 class Settings:
     token: str
@@ -31,7 +39,8 @@ class Settings:
     guild_id: int
     channel_id: int
     homes: tuple[DiscordHome, ...]
-    allowed_user_id: int
+    thread_home_channel_id: int
+    allowed_user_ids: frozenset[int]
     timezone: str
     cursor_agent_bin: str
     cursor_agent_timeout: float
@@ -49,6 +58,11 @@ class Settings:
     redmine_default_issue_id: int | None = None
 
     @property
+    def allowed_user_id(self) -> int:
+        """Primary operator (Luipy). Kept for callers that expect a single id."""
+        return LUIPY_DISCORD_ID
+
+    @property
     def guild_ids(self) -> tuple[int, ...]:
         seen: list[int] = []
         for home in self.homes:
@@ -60,9 +74,24 @@ class Settings:
     def channel_ids(self) -> frozenset[int]:
         return frozenset(h.channel_id for h in self.homes if h.channel_id > 0)
 
-    def is_maestro_channel(self, channel_id: int) -> bool:
-        """True if channel is allowed for NL / ca_persist.
+    def is_listen_guild(self, guild_id: int | None) -> bool:
+        """True if NL / ca_persist may run in this guild.
 
+        Empty guild set = no guild gate. DMs (guild_id None/0) are never allowed.
+        Channel id is not checked: listen is guild-wide for allowlisted users.
+        """
+        if guild_id is None or int(guild_id) <= 0:
+            return False
+        allowed = self.guild_ids
+        if not allowed:
+            return True
+        return int(guild_id) in allowed
+
+    def is_maestro_channel(self, channel_id: int) -> bool:
+        """True if channel is a configured home channel (legacy helper).
+
+        Prefer is_listen_guild for NL / ca_persist gates and
+        thread_home_channel_id_for(guild_id) for persist thread parents.
         Empty channel set = no channel gate (legacy channel_id=0).
         """
         allowed = self.channel_ids
@@ -70,9 +99,68 @@ class Settings:
             return True
         return channel_id in allowed
 
+    def home_for_guild(self, guild_id: int | None) -> DiscordHome | None:
+        """First configured home for this guild, or None."""
+        if guild_id is None or int(guild_id) <= 0:
+            return None
+        gid = int(guild_id)
+        for home in self.homes:
+            if home.guild_id == gid and home.channel_id > 0:
+                return home
+        return None
 
-# Hardcoded sole operator (Luipy). Env/config must match.
-LUIPY_DISCORD_ID = 488728568457854976
+    def thread_home_channel_id_for(self, guild_id: int | None) -> int:
+        """Persist-thread parent channel for the source guild.
+
+        Prefer that guild's home channel from homes[]. Fall back to the
+        legacy global thread_home_channel_id only when the guild has no home.
+        """
+        home = self.home_for_guild(guild_id)
+        if home is not None:
+            return home.channel_id
+        return int(self.thread_home_channel_id or 0)
+
+    def is_allowed_user(self, user_id: int) -> bool:
+        return int(user_id) in self.allowed_user_ids
+
+    def is_owner(self, user_id: int) -> bool:
+        """True for Luipy (restart + privileged ops)."""
+        return int(user_id) == LUIPY_DISCORD_ID
+
+
+def _load_thread_home_channel_id(
+    discord_cfg: dict, homes: tuple[DiscordHome, ...]
+) -> int:
+    """Legacy fallback channel when a source guild has no homes[] entry.
+
+    Persist threads normally open under the home channel of the guild where
+    the operator spoke (see Settings.thread_home_channel_id_for).
+
+    Priority for this fallback:
+    1. DISCORD_THREAD_HOME_CHANNEL_ID env
+    2. config discord.thread_home_channel_id
+    3. Default preferred id if present in homes
+    4. First home channel_id
+    """
+    env_raw = (os.environ.get("DISCORD_THREAD_HOME_CHANNEL_ID") or "").strip()
+    if env_raw.isdigit():
+        return int(env_raw)
+
+    cfg_raw = discord_cfg.get("thread_home_channel_id")
+    if cfg_raw is not None and str(cfg_raw).strip() != "":
+        try:
+            cid = int(cfg_raw)
+        except (TypeError, ValueError):
+            cid = 0
+        if cid > 0:
+            return cid
+
+    home_ids = {h.channel_id for h in homes if h.channel_id > 0}
+    if _DEFAULT_THREAD_HOME_CHANNEL_ID in home_ids:
+        return _DEFAULT_THREAD_HOME_CHANNEL_ID
+    if homes and homes[0].channel_id > 0:
+        return homes[0].channel_id
+    return _DEFAULT_THREAD_HOME_CHANNEL_ID
 
 
 def _parse_home_pair(guild_raw: object, channel_raw: object) -> DiscordHome | None:
@@ -154,6 +242,55 @@ def _load_homes(discord_cfg: dict) -> tuple[DiscordHome, ...]:
     return (legacy,)
 
 
+def _parse_user_id(raw: object) -> int | None:
+    try:
+        uid = int(raw)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    if uid <= 0:
+        return None
+    return uid
+
+
+def _load_allowed_user_ids(discord_cfg: dict) -> frozenset[int]:
+    """Resolve Discord allowlist (multi-operator).
+
+    Priority merge (all sources unioned; Luipy always included):
+    1. MAESTRO_ALLOWED_USER_IDS env (comma-separated snowflakes)
+    2. config discord.allowed_user_ids[]
+    3. Legacy MAESTRO_ALLOWED_USER_ID / discord.allowed_user_id
+    """
+    ids: set[int] = {LUIPY_DISCORD_ID}
+
+    env_multi = (os.environ.get("MAESTRO_ALLOWED_USER_IDS") or "").strip()
+    if env_multi:
+        for part in env_multi.split(","):
+            uid = _parse_user_id(part.strip())
+            if uid is not None:
+                ids.add(uid)
+
+    cfg_multi = discord_cfg.get("allowed_user_ids")
+    if isinstance(cfg_multi, list):
+        for item in cfg_multi:
+            uid = _parse_user_id(item)
+            if uid is not None:
+                ids.add(uid)
+
+    env_one = (os.environ.get("MAESTRO_ALLOWED_USER_ID") or "").strip()
+    if env_one:
+        uid = _parse_user_id(env_one)
+        if uid is not None:
+            ids.add(uid)
+
+    cfg_one = discord_cfg.get("allowed_user_id")
+    if cfg_one is not None:
+        uid = _parse_user_id(cfg_one)
+        if uid is not None:
+            ids.add(uid)
+
+    return frozenset(ids)
+
+
 def load_settings(repo_root: Path | None = None) -> Settings:
     root = (repo_root or Path(__file__).resolve().parent.parent).resolve()
     load_dotenv(root / ".env")
@@ -169,21 +306,15 @@ def load_settings(repo_root: Path | None = None) -> Settings:
     ca_cfg = raw.get("cursor_agent") or {}
     host_cfg = raw.get("host") or {}
     nl_cfg = raw.get("nl") or {}
-    default_timeout = float(ca_cfg.get("timeout_seconds") or 900)
+    default_timeout = float(ca_cfg.get("timeout_seconds") or 1200)
 
     token = os.environ.get("DISCORD_TOKEN", "").strip()
     if not token:
         raise RuntimeError("DISCORD_TOKEN is required in .env")
 
-    allowed = int(
-        os.environ.get("MAESTRO_ALLOWED_USER_ID")
-        or discord_cfg.get("allowed_user_id")
-        or LUIPY_DISCORD_ID
+    allowed_user_ids = _load_allowed_user_ids(
+        discord_cfg if isinstance(discord_cfg, dict) else {}
     )
-    if allowed != LUIPY_DISCORD_ID:
-        raise RuntimeError(
-            f"Maestro is hard-locked to Luipy ({LUIPY_DISCORD_ID}); got allowed_user_id={allowed}"
-        )
 
     ws_raw = str(ca_cfg.get("workspace") or "/root")
     workspace = Path(ws_raw).expanduser().resolve()
@@ -224,6 +355,8 @@ def load_settings(repo_root: Path | None = None) -> Settings:
 
     homes = _load_homes(discord_cfg if isinstance(discord_cfg, dict) else {})
     primary = homes[0] if homes else DiscordHome(guild_id=0, channel_id=0)
+    discord_cfg_dict = discord_cfg if isinstance(discord_cfg, dict) else {}
+    thread_home_channel_id = _load_thread_home_channel_id(discord_cfg_dict, homes)
 
     return Settings(
         token=token,
@@ -236,7 +369,8 @@ def load_settings(repo_root: Path | None = None) -> Settings:
         guild_id=primary.guild_id,
         channel_id=primary.channel_id,
         homes=homes,
-        allowed_user_id=LUIPY_DISCORD_ID,
+        thread_home_channel_id=thread_home_channel_id,
+        allowed_user_ids=allowed_user_ids,
         timezone=str(raw.get("timezone") or "UTC"),
         cursor_agent_bin=str(
             os.environ.get("CURSOR_AGENT_BIN")

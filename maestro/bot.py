@@ -46,7 +46,7 @@ from maestro.nl_router import (
 )
 from maestro.outbound import (
     chunk_paths,
-    collect_outbound_images,
+    collect_outbound_files,
     mark_outbound_sent,
     oneshot_outbound_dir,
     purge_thread_outbound,
@@ -67,22 +67,22 @@ from maestro.restart_guard import (
 )
 from maestro.sanitize import chunk_discord, sanitize_for_discord
 from maestro.sessions import SessionRecord, SessionStore
-from maestro.settings import LUIPY_DISCORD_ID, Settings
+from maestro.settings import Settings
 from maestro.status_heartbeat import StatusHeartbeat
 from maestro.thread_queue import ThreadQueueManager
 
 logger = logging.getLogger("maestro")
 chat_log = logging.getLogger("maestro.chat")
 
-_HELP = f"""**Maestro v{__version__}** — MVP · **Luipy only** (Team: watch / ask Luipy)
+_HELP = f"""**Maestro v{__version__}** — MVP · **allowlist** (restart: Luipy only)
 
 **What** — Discord ultra-orchestrator. Runs **cursor-agent** on lu-zero against a multi-host catalog (remote work via SSH). Persist threads keep one Cursor chat.
 
 **Quick start**
 1. `/list_projects` — hosts & projects
-2. `/ca_persist` `task` — open a work thread (or **@Maestro** / reply)
+2. `/ca_persist` `task` — open a work thread in **that guild's** Maestro home channel (or **@Maestro** / reply from any listen guild channel)
 3. Keep chatting **inside** the thread — same session (queue if busy; **Stop** on busy status)
-4. `/thread_end` — summary → parent channel, then thread deleted
+4. `/thread_end` — summary → parent channel, then thread deleted (`clean` skips Redmine)
 
 **Commands**
 • `/help` — This guide · `/ping` — latency
@@ -90,17 +90,18 @@ _HELP = f"""**Maestro v{__version__}** — MVP · **Luipy only** (Team: watch / 
 • `/ca` `text` — one-shot (no thread)
 • `/ca_persist` `text` — thread + resume
 • `/stop_ca` — **inside** thread: abort that resume + clear **its** queue
-• `/thread_end` — **inside** thread: close session
-• `/restart_maestro` `[force]` — restart bot (`force` kills busy `/ca`)
+• `/thread_end` `[clean]` — **inside** thread: close session (`clean` = no Redmine close note)
+• `/restart_maestro` `[force]` — restart bot (**Luipy only**; `force` kills busy `/ca`)
 
 **Also**
 • Attachments (images, PDF, logs/text) → cached for the agent; purge on `/thread_end` (TTL 72h)
-• Outbound images: agent saves PNG/JPEG; Maestro **attaches** them after the turn
-• Redmine (MaestroBot): **one** close note — project hub → else one primary ticket → else #8077
+• Outbound files: agent saves under `data/outbound/…` (images, JSON, HTML, PDF, logs, …); Maestro **attaches** them after the turn
+• Redmine (MaestroBot): **one** close note — project hub → else one primary ticket → else #8077 (skip with `/thread_end clean:True`)
 • **No secrets** on Discord · never wipe end-user data without scoped OK from Luipy
 """
 
-_DENY = "Maestro only responds to **Luipy**."
+_DENY = "Maestro only responds to **allowlisted** operators."
+_DENY_RESTART = "`/restart_maestro` is **Luipy only**."
 _CA_PROMPT = "ca-lu-zero.md"
 _DISCORD_MSG_MAX = 2000
 _NL_STATUS_ROUTING = "Routing your message…"
@@ -250,8 +251,11 @@ class MaestroBot(discord.Client):
         self.tree = app_commands.CommandTree(self)
         self._register_commands()
 
+    def _is_allowed(self, user_id: int) -> bool:
+        return self.settings.is_allowed_user(user_id)
+
     def _is_luipy(self, user_id: int) -> bool:
-        return user_id == LUIPY_DISCORD_ID
+        return self.settings.is_owner(user_id)
 
     async def _prepare_message_text(
         self,
@@ -338,10 +342,13 @@ class MaestroBot(discord.Client):
         ]
         if outbound_dir is not None:
             parts.append(
-                "Outbound Discord images: save PNG/JPEG under "
+                "Outbound Discord files: save under "
                 f"`{outbound_dir}` (create the directory if needed). "
+                "Allowed: images (PNG/JPEG/GIF/WebP), JSON, HTML, TXT/MD/CSV/LOG, "
+                "PDF, SVG, XML/YAML, .red, ZIP, WebM. "
                 "Maestro attaches those files to Discord after this turn. "
-                "Do not rely on markdown image links for Discord delivery."
+                "Do not rely on markdown image links for Discord delivery. "
+                "Never put secrets or credential files in outbound."
             )
         if persist:
             parts.append(
@@ -452,7 +459,7 @@ class MaestroBot(discord.Client):
 
         @self.tree.command(name="help", description="Short Maestro guide + commands")
         async def help_cmd(interaction: discord.Interaction) -> None:
-            if not bot._is_luipy(interaction.user.id):
+            if not bot._is_allowed(interaction.user.id):
                 await interaction.response.send_message(_DENY, ephemeral=True)
                 return
             await interaction.response.send_message(
@@ -462,7 +469,7 @@ class MaestroBot(discord.Client):
 
         @self.tree.command(name="ping", description="Connectivity check")
         async def ping_cmd(interaction: discord.Interaction) -> None:
-            if not bot._is_luipy(interaction.user.id):
+            if not bot._is_allowed(interaction.user.id):
                 await interaction.response.send_message(_DENY, ephemeral=True)
                 return
             latency_ms = round(bot.latency * 1000)
@@ -490,7 +497,7 @@ class MaestroBot(discord.Client):
             interaction: discord.Interaction,
             host: app_commands.Choice[str] | None = None,
         ) -> None:
-            if not bot._is_luipy(interaction.user.id):
+            if not bot._is_allowed(interaction.user.id):
                 await interaction.response.send_message(_DENY, ephemeral=True)
                 return
             filt = host.value if host is not None else "all"
@@ -524,8 +531,14 @@ class MaestroBot(discord.Client):
             name="thread_end",
             description="Destroy this Maestro persist thread (use inside the thread)",
         )
-        async def thread_end_cmd(interaction: discord.Interaction) -> None:
-            await bot._run_thread_end(interaction)
+        @app_commands.describe(
+            clean="If true, close without posting a Redmine close note",
+        )
+        async def thread_end_cmd(
+            interaction: discord.Interaction,
+            clean: bool = False,
+        ) -> None:
+            await bot._run_thread_end(interaction, clean=clean)
 
         @self.tree.command(
             name="restart_maestro",
@@ -702,7 +715,7 @@ class MaestroBot(discord.Client):
         for part in parts[1:]:
             await send_extra(part[:_DISCORD_MSG_MAX])
         if channel is not None:
-            await self._send_outbound_images(
+            await self._send_outbound_files(
                 channel,
                 outbound_dir=outbound_dir,
                 agent_text=result.stdout or "",
@@ -715,15 +728,15 @@ class MaestroBot(discord.Client):
             result.session_id,
         )
 
-    async def _send_outbound_images(
+    async def _send_outbound_files(
         self,
         channel: discord.abc.Messageable,
         *,
         outbound_dir: Path | None,
         agent_text: str = "",
     ) -> int:
-        """Attach agent-produced images to Discord. Returns number of files sent."""
-        paths = collect_outbound_images(
+        """Attach agent-produced outbound files to Discord. Returns count sent."""
+        paths = collect_outbound_files(
             state_dir=self.settings.state_dir,
             scope_dir=outbound_dir,
             agent_text=agent_text,
@@ -741,26 +754,26 @@ class MaestroBot(discord.Client):
                 label = (
                     f"**Attachment** · `{opened[0].name}`"
                     if len(opened) == 1
-                    else f"**Attachments** · {len(opened)} image(s)"
+                    else f"**Attachments** · {len(opened)} file(s)"
                 )
                 await channel.send(label, files=files)
                 mark_outbound_sent(opened)
                 sent += len(opened)
             except discord.HTTPException as e:
-                logger.warning("outbound image send failed: %s", e)
+                logger.warning("outbound file send failed: %s", e)
                 try:
                     await channel.send(
-                        "**Attachment failed** · could not upload image(s) "
-                        "(check bot **Attach Files** permission)."
+                        "**Attachment failed** · could not upload file(s) "
+                        "(check bot **Attach Files** permission / size limits)."
                     )
                 except discord.HTTPException:
                     pass
                 break
             except OSError as e:
-                logger.warning("outbound image open failed: %s", e)
+                logger.warning("outbound file open failed: %s", e)
                 break
         if sent:
-            logger.info("outbound images sent count=%s dir=%s", sent, outbound_dir)
+            logger.info("outbound files sent count=%s dir=%s", sent, outbound_dir)
         return sent
 
     async def _run_restart_maestro(
@@ -770,7 +783,7 @@ class MaestroBot(discord.Client):
         force: bool = False,
     ) -> None:
         if not self._is_luipy(interaction.user.id):
-            await interaction.response.send_message(_DENY, ephemeral=True)
+            await interaction.response.send_message(_DENY_RESTART, ephemeral=True)
             return
         try:
             await interaction.response.defer(ephemeral=False, thinking=False)
@@ -799,7 +812,7 @@ class MaestroBot(discord.Client):
         return ""
 
     async def _run_ca_slash(self, interaction: discord.Interaction, *, text: str) -> None:
-        if not self._is_luipy(interaction.user.id):
+        if not self._is_allowed(interaction.user.id):
             await interaction.response.send_message(_DENY, ephemeral=True)
             return
 
@@ -842,7 +855,7 @@ class MaestroBot(discord.Client):
     async def _run_ca_persist_slash(
         self, interaction: discord.Interaction, *, text: str
     ) -> None:
-        if not self._is_luipy(interaction.user.id):
+        if not self._is_allowed(interaction.user.id):
             await interaction.response.send_message(_DENY, ephemeral=True)
             return
         if not text.strip():
@@ -851,9 +864,10 @@ class MaestroBot(discord.Client):
                 ephemeral=True,
             )
             return
-        if not self.settings.is_maestro_channel(interaction.channel_id or 0):
+        guild_id = interaction.guild_id
+        if not self.settings.is_listen_guild(guild_id):
             await interaction.response.send_message(
-                "Use `/ca_persist` in a Maestro channel.",
+                "Use `/ca_persist` in a Maestro guild channel (not DM).",
                 ephemeral=True,
             )
             return
@@ -870,8 +884,9 @@ class MaestroBot(discord.Client):
             await self._start_persist_session(
                 user=interaction.user,
                 text=text.strip(),
-                anchor_message=await interaction.original_response(),
+                notify_message=await interaction.original_response(),
                 source="slash-persist",
+                guild_id=guild_id,
             )
         except Exception as e:
             logger.exception("ca_persist failed")
@@ -892,19 +907,63 @@ class MaestroBot(discord.Client):
                 logger.warning("could not post Original msg in thread: %s", e)
                 return
 
+    async def _get_thread_home_channel(
+        self, guild_id: int | None
+    ) -> discord.TextChannel:
+        """Resolve the persist-thread parent for the source guild's home channel."""
+        cid = int(self.settings.thread_home_channel_id_for(guild_id) or 0)
+        if cid <= 0:
+            raise RuntimeError(
+                "No Maestro home channel configured for this guild "
+                "(discord.homes / thread_home_channel_id)"
+            )
+        channel = self.get_channel(cid)
+        if channel is None:
+            try:
+                channel = await self.fetch_channel(cid)
+            except discord.HTTPException as e:
+                raise RuntimeError(
+                    f"Cannot fetch thread home channel `{cid}`: {e}"
+                ) from e
+        if not isinstance(channel, discord.TextChannel):
+            raise RuntimeError(
+                f"thread home channel `{cid}` is not a text channel "
+                f"(got {type(channel).__name__})"
+            )
+        return channel
+
     async def _start_persist_session(
         self,
         *,
         user: discord.abc.User,
         text: str,
-        anchor_message: discord.Message,
+        notify_message: discord.Message | None,
         source: str,
         source_message: discord.Message | None = None,
+        guild_id: int | None = None,
     ) -> discord.Thread:
+        async def _notify(content: str) -> None:
+            if notify_message is None:
+                return
+            try:
+                await notify_message.edit(content=content)
+            except discord.HTTPException as e:
+                logger.warning("persist notify edit failed: %s", e)
+
+        if guild_id is None and source_message is not None:
+            g = getattr(source_message, "guild", None)
+            guild_id = getattr(g, "id", None) if g is not None else None
+
         try:
             workspace, project_id, project = self._resolve_workspace(text)
         except FileNotFoundError as e:
-            await anchor_message.edit(content=str(e))
+            await _notify(str(e))
+            raise
+
+        try:
+            home = await self._get_thread_home_channel(guild_id)
+        except RuntimeError as e:
+            await _notify(f"**ca_persist failed**\n{e}")
             raise
 
         chat_id = await create_cursor_chat(bin_path=self.settings.cursor_agent_bin)
@@ -912,11 +971,43 @@ class MaestroBot(discord.Client):
         name = _thread_name(
             project_id, catalog_host, cursor_chat_id=chat_id, text=text
         )
-        thread = await anchor_message.create_thread(
-            name=name,
-            auto_archive_duration=1440,
-            reason="Maestro ca_persist session",
+
+        reuse_notify = (
+            notify_message is not None
+            and getattr(notify_message.channel, "id", 0) == home.id
+            and not isinstance(notify_message.channel, discord.Thread)
         )
+        if reuse_notify:
+            assert notify_message is not None
+            anchor_message = notify_message
+        else:
+            try:
+                anchor_message = await home.send(
+                    f"**Maestro /ca_persist** · opening for {user.mention}…"
+                )
+            except discord.HTTPException as e:
+                await _notify(
+                    f"**ca_persist failed**\nCannot post in thread home "
+                    f"<#{home.id}>: {type(e).__name__}: {e}"
+                )
+                raise
+
+        try:
+            thread = await anchor_message.create_thread(
+                name=name,
+                auto_archive_duration=1440,
+                reason="Maestro ca_persist session",
+            )
+        except discord.HTTPException as e:
+            err = f"**ca_persist failed**\n{type(e).__name__}: {e}"
+            try:
+                await anchor_message.edit(content=err)
+            except discord.HTTPException:
+                pass
+            if not reuse_notify:
+                await _notify(err)
+            raise
+
         try:
             await thread.join()
         except (discord.HTTPException, AttributeError):
@@ -941,7 +1032,7 @@ class MaestroBot(discord.Client):
             project_id=project_id,
             host=catalog_host,
             owner_id=user.id,
-            parent_channel_id=anchor_message.channel.id,
+            parent_channel_id=home.id,
             anchor_message_id=anchor_message.id,
             status="active",
             created_at=datetime.now(timezone.utc).isoformat(),
@@ -954,15 +1045,24 @@ class MaestroBot(discord.Client):
         if project is not None and not project.is_local_to(self.settings.local_host):
             remote_note = f" · remote `ssh {project.ssh_alias}`"
 
-        await anchor_message.edit(
-            content=(
-                f"**Maestro /ca_persist** · `{project_id}` · `{catalog_host}`{remote_note}\n"
-                f"Thread: {thread.mention} · session bound (agent on `{self.settings.local_host}`).\n"
-                f"Messages in the thread continue Cursor (`--resume`). "
-                f"`/stop_ca` stops **this** thread's run. "
-                f"Use `/thread_end` **inside** the thread to destroy it."
-            )
+        home_body = (
+            f"**Maestro /ca_persist** · `{project_id}` · `{catalog_host}`{remote_note}\n"
+            f"Thread: {thread.mention} · session bound (agent on `{self.settings.local_host}`).\n"
+            f"Messages in the thread continue Cursor (`--resume`). "
+            f"`/stop_ca` stops **this** thread's run. "
+            f"Use `/thread_end` **inside** the thread to destroy it."
         )
+        try:
+            await anchor_message.edit(content=home_body)
+        except discord.HTTPException as e:
+            logger.warning("persist home anchor edit failed: %s", e)
+
+        if not reuse_notify:
+            await _notify(
+                f"**Session opened** in {thread.mention} "
+                f"(home <#{home.id}>) · `{project_id}` · `{catalog_host}`{remote_note}"
+            )
+
         await thread.send(
             f"Persistent session ready · project `{project_id}` · catalog host `{catalog_host}`.\n"
             f"Send messages here to continue. `/stop_ca` stops the current run · "
@@ -970,11 +1070,12 @@ class MaestroBot(discord.Client):
         )
         await self._post_original_msg(thread, text.strip())
         chat_log.info(
-            "persist started thread=%s project=%s chat=%s source=%s",
+            "persist started thread=%s project=%s chat=%s source=%s home=%s",
             thread.id,
             project_id,
             chat_id,
             source,
+            home.id,
         )
         if not first_text.strip():
             await thread.send("First turn had no text or usable images.")
@@ -1259,6 +1360,7 @@ class MaestroBot(discord.Client):
         *,
         notify_channel: discord.abc.Messageable | None = None,
         summarize: bool = True,
+        post_redmine: bool = True,
     ) -> None:
         rec = self.sessions.get_active(thread_id) or self.sessions.get(thread_id)
         channel = self.get_channel(thread_id)
@@ -1273,14 +1375,15 @@ class MaestroBot(discord.Client):
             try:
                 summary = await self._summarize_persist_session(rec, thread)
                 rm_note = ""
-                try:
-                    rm_note = await self._post_redmine_close_notes(
-                        rec, summary=summary
-                    )
-                except Exception:
-                    logger.exception(
-                        "redmine close notes failed thread=%s", thread_id
-                    )
+                if post_redmine:
+                    try:
+                        rm_note = await self._post_redmine_close_notes(
+                            rec, summary=summary
+                        )
+                    except Exception:
+                        logger.exception(
+                            "redmine close notes failed thread=%s", thread_id
+                        )
                 if rm_note:
                     summary = f"{summary}\n- {rm_note}"
                 await self._post_close_summary(rec, summary)
@@ -1353,7 +1456,7 @@ class MaestroBot(discord.Client):
         return " · ".join(bits) + "."
 
     async def _run_stop_ca(self, interaction: discord.Interaction) -> None:
-        if not self._is_luipy(interaction.user.id):
+        if not self._is_allowed(interaction.user.id):
             await interaction.response.send_message(_DENY, ephemeral=True)
             return
         ch = interaction.channel
@@ -1367,8 +1470,13 @@ class MaestroBot(discord.Client):
         msg = await self.stop_persist_run(ch.id)
         await interaction.response.send_message(msg)
 
-    async def _run_thread_end(self, interaction: discord.Interaction) -> None:
-        if not self._is_luipy(interaction.user.id):
+    async def _run_thread_end(
+        self,
+        interaction: discord.Interaction,
+        *,
+        clean: bool = False,
+    ) -> None:
+        if not self._is_allowed(interaction.user.id):
             await interaction.response.send_message(_DENY, ephemeral=True)
             return
         ch = interaction.channel
@@ -1385,15 +1493,24 @@ class MaestroBot(discord.Client):
                 ephemeral=True,
             )
             return
-        await interaction.response.send_message(
-            "Ending session · summarizing to parent channel · deleting thread…"
+        if clean:
+            ack = (
+                "Ending session · summarizing to parent channel · "
+                "no Redmine close note · deleting thread…"
+            )
+        else:
+            ack = (
+                "Ending session · summarizing to parent channel · deleting thread…"
+            )
+        await interaction.response.send_message(ack)
+        await self.end_persist_thread(
+            ch.id, notify_channel=None, post_redmine=not clean
         )
-        await self.end_persist_thread(ch.id, notify_channel=None)
 
     async def on_message(self, message: discord.Message) -> None:
         if message.author.bot:
             return
-        if not self._is_luipy(message.author.id):
+        if not self._is_allowed(message.author.id):
             return
 
         # Persist thread follow-ups (no @mention required)
@@ -1449,8 +1566,8 @@ class MaestroBot(discord.Client):
         if not self.settings.nl_commands:
             return
 
-        ch_id = getattr(message.channel, "id", 0) or 0
-        if not self.settings.is_maestro_channel(ch_id):
+        guild_id = message.guild.id if message.guild is not None else None
+        if not self.settings.is_listen_guild(guild_id):
             return
 
         await self._handle_nl_message(message, via)
@@ -1580,6 +1697,9 @@ class MaestroBot(discord.Client):
             )
             return
         if cmd == "restart_maestro":
+            if not self._is_luipy(message.author.id):
+                await _nl_edit_or_reply(message, status_message, _DENY_RESTART)
+                return
             force = bool(args.get("force"))
             decision = operator_restart(
                 state_dir=self.settings.state_dir,
@@ -1612,9 +1732,10 @@ class MaestroBot(discord.Client):
                 await self._start_persist_session(
                     user=message.author,
                     text=text,
-                    anchor_message=status_message,
+                    notify_message=status_message,
                     source="nl-persist",
                     source_message=message,
+                    guild_id=getattr(message.guild, "id", None),
                 )
             except Exception as e:
                 logger.exception("nl ca_persist failed")
@@ -1715,12 +1836,13 @@ class MaestroBot(discord.Client):
             f"{h.guild_id}:{h.channel_id}" for h in self.settings.homes
         ) or f"{self.settings.guild_id}:{self.settings.channel_id}"
         logger.info(
-            "Maestro online as %s (%s) | v%s | homes=%s | host=%s | "
+            "Maestro online as %s (%s) | v%s | homes=%s | thread_home_fallback=%s | host=%s | "
             "nl=%s | message_content=%s | projects=%s",
             user,
             user.id if user else "?",
             __version__,
             homes_fmt,
+            self.settings.thread_home_channel_id,
             self.settings.local_host,
             self.settings.nl_commands,
             self.settings.message_content_intent,

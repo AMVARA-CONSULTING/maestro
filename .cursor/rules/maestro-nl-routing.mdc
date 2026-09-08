@@ -8,7 +8,7 @@ alwaysApply: true
 ## Behavior
 
 - **Trigger:** `@Maestro` or **reply** to a Maestro message.
-- **Who:** Luipy only.
+- **Who:** Discord allowlist (`allowed_user_ids`). `/restart_maestro` stays Luipy only.
 - **Where:** configured Maestro `channel_id` only.
 - **Engine:** cursor-agent router (`prompts/nl-router.md`), **not** Gemma/OpenAI.
 - **Policy:** try `help` / `ping` / `list_projects` / `restart_maestro` (only if they explicitly ask to restart **Maestro/this bot now**) / `ca_persist` or `ca`; on unclear / parse error / timeout → **fallback to `ca_persist`** with the user text. If unsure between one-shot `ca` and persist, prefer **`ca_persist`**.

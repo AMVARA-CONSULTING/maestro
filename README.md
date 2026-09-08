@@ -14,19 +14,19 @@ Maestro keeps that loop in Discord. The admin speaks with slash commands or natu
 
 ## How it flows
 
-Maestro is a Discord bot. It reads the catalog, opens an AI session, and reaches servers over SSH. If the direct path fails or the case needs it, traffic can go through an SSH bridge with its own rules and context.
+Operator request path: Luipy → Discord → Maestro (catalog) → cursor-agent on lu-zero → fleet hosts over SSH. Side tools sit beside that path: Redmine notes, OpenCloud hangar, chrome-mcp, and Archify maps.
 
 <p align="center">
-  <img src="docs/maestro-flow.png" alt="Maestro flow: Discord → Maestro (+ AI model, catalog) → servers / remote tools / SSH bridge" width="760" />
+  <img src="docs/maestro-flow.png" alt="Maestro runtime map: Luipy → Discord → Maestro → catalog / cursor-agent → fleet + side tools" width="760" />
 </p>
 
 | Lane | Role |
 |------|------|
-| **Interface** | Discord: slash commands, @mentions, replies, threads |
-| **Core** | Maestro bot + catalog (projects, tools, context packs) + focused AI session |
-| **Destination** | Catalog hosts over SSH; remote tools already deployed on the fleet; SSH bridge as fallback |
+| **Operator path** | Discord slash / NL / threads → Maestro → Catalog → cursor-agent |
+| **Fleet reach** | SSH to catalog hosts; chrome-mcp on amvara2 for real browser |
+| **Side tools** | Redmine (MaestroBot), OpenCloud Space, Archify diagrams |
 
-What is not in the catalog does not exist for Maestro.
+Interactive HTML + JSON source: `docs/archify/maestro-runtime.architecture.*`. What is not in the catalog does not exist for Maestro.
 
 ## Horizontal access (not just one folder)
 
@@ -47,7 +47,7 @@ Same thread: read a log here, execute there, return one answer.
 | **NL + slash** | Natural language and slash commands in the same home channel or persist thread |
 | **Persistent sessions** | Discord threads bound to a resumable Cursor chat (`/ca_persist`, follow-ups, busy queue) |
 | **Attachment ingest** | Reads images, screenshots, logs, PDF, and text-like files from the message |
-| **Outbound media** | Generates or captures images and attaches them to the Discord reply |
+| **Outbound media** | Attaches agent files from `data/outbound/` (images, JSON, HTML, PDF, logs, …) to the Discord reply |
 | **File hangar** | Lists / downloads / uploads via OpenCloud WebDAV (survives Discord attachment TTL) |
 | **Remote tools** | Invokes fleet services already on catalog hosts (Chrome, OpenCloud, …) over SSH |
 | **Traceability** | Writes Redmine journal notes; can use existing mail infra when the case needs it |
@@ -63,7 +63,7 @@ Same thread: read a log here, execute there, return one answer.
 | `/ca` | One-shot cursor-agent |
 | `/ca_persist` | Thread + resumable Cursor chat |
 | `/stop_ca` | Stop this thread's run + clear its queue |
-| `/thread_end` | Close session, summarize, delete the thread |
+| `/thread_end` `[clean]` | Close session, summarize, delete the thread (`clean` skips Redmine) |
 | `/restart_maestro` | Restart the bot (**admin only**) |
 | `@Maestro` / reply | Natural language → usually `ca_persist` |
 
@@ -76,14 +76,15 @@ Same thread: read a log here, execute there, return one answer.
 | `contexts/` | Per-project `CONTEXT.md` packs |
 | `prompts/` | Agent / NL router prompts |
 | `.cursor/` | Rules and skills |
-| `docs/` | Brand + flow diagram |
+| `docs/` | Brand art + flow PNG |
+| `docs/archify/` | Archify runtime map (JSON / HTML / visual-check) |
 | `systemd/maestro.service` | Service unit |
 | `.env.example` | Secret keys (copy to `.env`) |
 
 ## Setup
 
 1. Copy `.env.example` → `.env` and fill Discord (and optional Redmine / OpenCloud) values.
-2. Adjust `config.json` (guild / channel / homes / allowed admin user).
+2. Adjust `config.json` (guild / channel / homes / `allowed_user_ids`).
 3. `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`
 4. Install and enable `systemd/maestro.service` (edit paths if needed).
 5. Restart with Discord `/restart_maestro` (or host CLI `python -m maestro.restart_guard operator` when not in an agent session).

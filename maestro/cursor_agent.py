@@ -187,7 +187,7 @@ async def call_cursor_agent_session(
     state_dir: Path,
     user_request: str,
     session_context: str | None = None,
-    timeout_seconds: float = 900.0,
+    timeout_seconds: float = 1200.0,
     resume_chat_id: str | None = None,
     inject_prompt_template: bool = True,
     proc_slot: AgentProcSlot | None = None,

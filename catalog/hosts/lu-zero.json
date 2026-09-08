@@ -189,6 +189,19 @@
         "lu zero ops"
       ],
       "active": true
+    },
+    {
+      "id": "archify",
+      "kind": "ops",
+      "path": "/root/outils/archify",
+      "summary": "Archify diagram tool: JSON IR to validated interactive architecture/workflow/sequence HTML maps.",
+      "context": "contexts/archify",
+      "aliases": [
+        "archify diagrams",
+        "architecture maps",
+        "system map"
+      ],
+      "active": true
     }
   ]
 }

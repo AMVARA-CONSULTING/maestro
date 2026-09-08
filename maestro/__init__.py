@@ -1,3 +1,3 @@
-"""Maestro — Discord slash bot (/ca, /ping, /help) for Luipy on lu-zero."""
+"""Maestro — Discord slash bot (/ca, /ping, /help) for allowlisted operators on lu-zero."""
 
-__version__ = "0.4.13"
+__version__ = "0.4.17"

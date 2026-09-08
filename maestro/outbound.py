@@ -1,4 +1,4 @@
-"""Agent → Discord outbound image attachments."""
+"""Agent → Discord outbound file attachments."""
 
 from __future__ import annotations
 
@@ -9,9 +9,33 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-_IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+# Keep under Discord ~25 MiB hard limit.
 _MAX_FILES_PER_MESSAGE = 10
-_MAX_FILE_BYTES = 24 * 1024 * 1024  # stay under Discord ~25 MiB
+_MAX_FILE_BYTES = 24 * 1024 * 1024
+
+_IMAGE_SUFFIXES = frozenset({".png", ".jpg", ".jpeg", ".gif", ".webp"})
+# Docs / artifacts agents commonly produce for Luipy (never secrets: no .env, keys, pem).
+_DOC_SUFFIXES = frozenset(
+    {
+        ".json",
+        ".html",
+        ".htm",
+        ".txt",
+        ".md",
+        ".csv",
+        ".log",
+        ".pdf",
+        ".svg",
+        ".xml",
+        ".yaml",
+        ".yml",
+        ".red",
+        ".zip",
+        ".webm",
+    }
+)
+_ALLOWED_SUFFIXES = _IMAGE_SUFFIXES | _DOC_SUFFIXES
+
 _OUTBOUND_MARKER_RE = re.compile(
     r"(?im)^###\s*Outbound files\s*$([\s\S]*?)(?=^###\s|\Z)"
 )
@@ -35,8 +59,13 @@ def oneshot_outbound_dir(state_dir: Path, message_id: int) -> Path:
     return path
 
 
-def list_outbound_images(directory: Path) -> list[Path]:
-    """Return image files in directory (non-recursive), oldest first."""
+def is_allowed_outbound(path: Path) -> bool:
+    """True if path looks like a safe outbound artifact (by suffix)."""
+    return path.suffix.casefold() in _ALLOWED_SUFFIXES
+
+
+def list_outbound_files(directory: Path) -> list[Path]:
+    """Return allowed outbound files in directory (non-recursive), oldest first."""
     if not directory.is_dir():
         return []
     files: list[Path] = []
@@ -45,16 +74,27 @@ def list_outbound_images(directory: Path) -> list[Path]:
             continue
         if p.name.startswith("."):
             continue
-        if p.suffix.casefold() not in _IMAGE_SUFFIXES:
+        if not is_allowed_outbound(p):
+            logger.warning("skip outbound disallowed suffix path=%s", p)
             continue
         try:
-            if p.stat().st_size <= 0 or p.stat().st_size > _MAX_FILE_BYTES:
-                logger.warning("skip outbound image size path=%s", p)
+            size = p.stat().st_size
+            if size <= 0 or size > _MAX_FILE_BYTES:
+                logger.warning("skip outbound file size path=%s bytes=%s", p, size)
                 continue
         except OSError:
             continue
         files.append(p)
     return files
+
+
+def list_outbound_images(directory: Path) -> list[Path]:
+    """Backward-compatible alias: images only."""
+    return [
+        p
+        for p in list_outbound_files(directory)
+        if p.suffix.casefold() in _IMAGE_SUFFIXES
+    ]
 
 
 def parse_outbound_paths_from_text(text: str) -> list[Path]:
@@ -73,21 +113,31 @@ def parse_outbound_paths_from_text(text: str) -> list[Path]:
         if not raw.startswith("/"):
             continue
         p = Path(raw)
-        if p.is_file() and p.suffix.casefold() in _IMAGE_SUFFIXES:
+        if p.is_file() and is_allowed_outbound(p):
+            try:
+                size = p.stat().st_size
+            except OSError:
+                continue
+            if size <= 0 or size > _MAX_FILE_BYTES:
+                logger.warning("skip outbound marker size path=%s bytes=%s", p, size)
+                continue
             out.append(p)
+        elif p.is_file():
+            logger.warning("skip outbound marker disallowed suffix path=%s", p)
     return out
 
 
-def collect_outbound_images(
+def collect_outbound_files(
     *,
     state_dir: Path,
     scope_dir: Path | None,
     agent_text: str = "",
 ) -> list[Path]:
-    """Merge scope-dir images + explicit paths from agent text (deduped)."""
+    """Merge scope-dir files + explicit paths from agent text (deduped)."""
+    _ = state_dir  # reserved for future global outbound scopes
     seen: set[Path] = set()
     ordered: list[Path] = []
-    for p in list_outbound_images(scope_dir) if scope_dir is not None else []:
+    for p in list_outbound_files(scope_dir) if scope_dir is not None else []:
         rp = p.resolve()
         if rp in seen:
             continue
@@ -100,6 +150,20 @@ def collect_outbound_images(
         seen.add(rp)
         ordered.append(p)
     return ordered
+
+
+def collect_outbound_images(
+    *,
+    state_dir: Path,
+    scope_dir: Path | None,
+    agent_text: str = "",
+) -> list[Path]:
+    """Backward-compatible alias for collect_outbound_files."""
+    return collect_outbound_files(
+        state_dir=state_dir,
+        scope_dir=scope_dir,
+        agent_text=agent_text,
+    )
 
 
 def mark_outbound_sent(paths: list[Path]) -> None:

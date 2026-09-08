@@ -21,6 +21,7 @@ alwaysApply: true
   1. catalog hub (or KM0 `#7594`)
   2. else one primary operator-mentioned work ticket
   3. else **`#8077`**
+- Exception: `/thread_end clean:True` skips the Redmine close note (Discord summary + delete still run).
 - Never fan-out close notes to every `#issue` cited in the thread.
 - Agents do not duplicate the automatic close note unless Luipy asks.
 

@@ -59,6 +59,8 @@ On `/thread_end`, MaestroBot posts **one** close note. Hierarchy:
 
 Never fan-out to every `#issue` that appeared in the chat or in agent tables.
 
+**Skip:** `/thread_end clean:True` closes the Discord thread (summary + delete) **without** posting a Redmine close note.
+
 Known hubs:
 
 | Catalog id | Doc ticket |
@@ -79,7 +81,7 @@ If a non-KM0 project has no `redmine_doc_issue_id`, ask Luipy before inventing o
 1. Luipy asks for a Redmine note / ticket update.
 2. Material work happened on **one** clear work ticket → post mid-session note to **that** ticket only.
 3. Project-level documentation trail → catalog hub.
-4. On `/thread_end`, runtime posts the automatic close note (agents do not duplicate unless Luipy asks).
+4. On `/thread_end`, runtime posts the automatic close note unless `clean:True` (agents do not duplicate unless Luipy asks).
 
 Do not spam. One clear note beats many fragments. Never post the same close text to many tickets.
 

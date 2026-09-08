@@ -21,7 +21,7 @@
 | Catalog field | `redmine_doc_issue_id` on each project (maestro hub = `#8066`; opencloud = `#7530`; KM0 fallback = `#7594`; orphan L&F = `#8077`) |
 | Secrets | Maestro host `/root/bots/maestro/.env` (`REDMINE_URL`, `REDMINE_API_KEY`, …) |
 | How to post | Skill `redmine-notes` (ASD-STE100 English + Textile `{{collapse(Title · Project · cursor-stamp)}}`; stamp = first 8 hex chars of Cursor chat id) |
-| Auto close | `/thread_end` posts **one** close note: catalog hub (or KM0 `#7594`) → else one primary mentioned work ticket → else `#8077`. Never fan-out. |
+| Auto close | `/thread_end` posts **one** close note: catalog hub (or KM0 `#7594`) → else one primary mentioned work ticket → else `#8077`. Never fan-out. Skip with `clean:True`. |
 
 Same project access pattern as Ultron (group **Amvara Developers** + **Desarrollador**). Never post API keys to Discord.
 

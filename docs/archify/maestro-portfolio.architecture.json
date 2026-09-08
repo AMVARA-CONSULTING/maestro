@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Maestro · cómo fluye",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "flujo-habitual",
+        "label": "Flujo habitual",
+        "focus": ["discord", "maestro", "ai", "servers"],
+        "note": "De Discord al núcleo y a los servidores por SSH."
+      },
+      {
+        "id": "contexto",
+        "label": "Contexto",
+        "focus": ["maestro", "catalog", "ai"],
+        "note": "Catálogo y Modelo IA alimentan la sesión enfocada."
+      },
+      {
+        "id": "destino",
+        "label": "Destino y respaldo",
+        "focus": ["servers", "tools", "bridge"],
+        "note": "Herramientas remotas vía servidores; puente SSH si hace falta."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "discord",
+      "type": "external",
+      "label": "Discord",
+      "sublabel": "Interfaz",
+      "pos": [40, 220],
+      "size": [140, 64],
+      "brand": "discord"
+    },
+    {
+      "id": "ai",
+      "type": "backend",
+      "label": "Modelo IA",
+      "sublabel": "sesión enfocada",
+      "pos": [280, 80],
+      "size": [160, 64]
+    },
+    {
+      "id": "maestro",
+      "type": "backend",
+      "label": "Maestro",
+      "sublabel": "bot orquestador",
+      "pos": [280, 220],
+      "size": [160, 64],
+      "tag": "núcleo"
+    },
+    {
+      "id": "catalog",
+      "type": "database",
+      "label": "Catálogo",
+      "sublabel": "proyectos · herramientas · contexto",
+      "pos": [280, 360],
+      "size": [160, 72]
+    },
+    {
+      "id": "tools",
+      "type": "cloud",
+      "label": "Herramientas",
+      "sublabel": "remotas",
+      "pos": [540, 80],
+      "size": [160, 64]
+    },
+    {
+      "id": "servers",
+      "type": "cloud",
+      "label": "Servidores",
+      "sublabel": "acceso SSH",
+      "pos": [540, 220],
+      "size": [160, 64]
+    },
+    {
+      "id": "bridge",
+      "type": "security",
+      "label": "Respaldo SSH",
+      "sublabel": "fallback · normas propias",
+      "pos": [540, 360],
+      "size": [160, 72]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Núcleo",
+      "wraps": ["ai", "maestro", "catalog"]
+    },
+    {
+      "kind": "region",
+      "label": "Destino",
+      "wraps": ["tools", "servers", "bridge"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "discord-maestro",
+      "from": "discord",
+      "to": "maestro",
+      "label": "orden / NL",
+      "variant": "emphasis"
+    },
+    {
+      "id": "maestro-ai",
+      "from": "maestro",
+      "to": "ai",
+      "label": "sesión",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDy": -52
+    },
+    {
+      "id": "maestro-catalog",
+      "from": "maestro",
+      "to": "catalog",
+      "label": "resuelve proyecto",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 56
+    },
+    {
+      "id": "maestro-servers",
+      "from": "maestro",
+      "to": "servers",
+      "label": "SSH",
+      "variant": "emphasis"
+    },
+    {
+      "id": "servers-tools",
+      "from": "servers",
+      "to": "tools",
+      "label": "invoca",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDy": -52
+    },
+    {
+      "id": "maestro-bridge",
+      "from": "maestro",
+      "to": "bridge",
+      "label": "si hace falta",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "servers-bridge",
+      "from": "servers",
+      "to": "bridge",
+      "label": "fallback",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 56
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Interfaz",
+      "items": [
+        "Discord: slash commands y lenguaje natural",
+        "Hilos persistentes ligados a la sesión"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Núcleo",
+      "items": [
+        "Maestro orquesta con catálogo y contexto",
+        "Modelo IA en sesión enfocada al caso"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Destino",
+      "items": [
+        "Servidores del catálogo por SSH",
+        "Herramientas remotas sin instalar nada nuevo",
+        "Puente SSH de respaldo con sus propias normas"
+      ]
+    }
+  ]
+}
